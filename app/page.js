@@ -1,3 +1,5 @@
+'use client'; // <--- QUAN TRỌNG NHẤT LÀ DÒNG NÀY
+
 import Link from 'next/link';
 
 export default function Home() {
@@ -17,7 +19,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Phần CSS làm đẹp nằm ngay ở dưới đây */}
       <style jsx global>{`
         /* Reset mặc định */
         body {
