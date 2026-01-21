@@ -5,11 +5,10 @@
 }
 
 html, body {
-  height: 100%;
-  width: 100%;
+  background-color: #000000; /* Mấu chốt là dòng này */
   margin: 0;
   padding: 0;
-  background-color: #000000; /* Quan trọng: Đen ngay từ gốc */
+  height: 100%;
+  width: 100%;
   overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
