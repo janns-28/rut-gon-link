@@ -11,7 +11,7 @@ const supabase = createClient(
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
   
-  // NẾU LÀ API HOẶC TRANG CHỦ THÌ CHO QUA LUÔN - KHÔNG CHẶN
+  // NẾU LÀ API HOẶC HỆ THỐNG THÌ CHO QUA LUÔN - KHÔNG ĐƯỢC CHẶN HAY REDIRECT
   if (
     pathname.startsWith('/api') || 
     pathname.startsWith('/_next') || 
