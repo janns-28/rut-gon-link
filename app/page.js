@@ -42,7 +42,7 @@ export default function Tet2026FinalFix() {
       });
       if (Math.random() < 0.05) {
         const x = Math.random() * canvas.width;
-        const y = Math.random() * canvas.height * 0.6;
+        const y = Math.random() * canvas.height * 0.4;
         const color = `hsl(${Math.random() * 40 + 40}, 100%, 65%)`;
         for (let i = 0; i < 40; i++) particles.push(new Particle(x, y, color));
       }
@@ -60,14 +60,15 @@ export default function Tet2026FinalFix() {
       {/* Icon tia sáng góc trên (Giống ảnh mẫu) */}
       <div className="sunburst">❂</div>
 
-      {/* Nhành mai uốn lượn góc dưới (Vẽ bằng SVG để không bao giờ lỗi ảnh) */}
+      {/* Nhành mai uốn lượn (Vẽ bằng SVG để luôn sắc nét) */}
       <div className="branch-container">
-        <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0,300 C50,250 150,280 250,220 T400,180" fill="none" stroke="#5d4037" strokeWidth="6" />
-          <circle cx="100" cy="275" r="10" fill="#f9d479" />
-          <circle cx="200" cy="245" r="12" fill="#f9d479" />
-          <circle cx="350" cy="195" r="10" fill="#f9d479" />
-          <circle cx="150" cy="260" r="8" fill="#f9d479" />
+        <svg viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,400 Q150,250 300,320 T500,200" fill="none" stroke="#5d4037" strokeWidth="8" strokeLinecap="round" />
+          <circle cx="150" cy="300" r="15" fill="#f9d479" />
+          <circle cx="280" cy="320" r="18" fill="#f9d479" />
+          <circle cx="450" cy="230" r="20" fill="#f9d479" />
+          <circle cx="80" cy="360" r="12" fill="#f9d479" />
+          <circle cx="220" cy="310" r="10" fill="#f9d479" />
         </svg>
       </div>
 
@@ -112,24 +113,25 @@ export default function Tet2026FinalFix() {
 
         .sunburst {
           position: absolute; top: 10%; left: 8%;
-          color: #f9d479; fontSize: 5rem; opacity: 0.4;
+          color: #f9d479; font-size: 5rem; opacity: 0.4;
         }
 
         .branch-container {
-          position: absolute; bottom: -20px; left: -20px;
-          width: 40vw; z-index: 5;
+          position: absolute; bottom: -40px; left: -40px;
+          width: 45vw; z-index: 5; pointer-events: none;
         }
 
         .main-content {
           position: relative; z-index: 10;
           text-align: center; color: #f9d479;
+          animation: fadeIn 2s ease-out;
         }
 
         .script-text {
           font-family: 'Dancing Script', cursive;
           font-size: clamp(3rem, 8vw, 6rem);
           margin: 0; font-weight: 400; font-style: italic;
-          margin-bottom: -15px; margin-left: -180px;
+          margin-bottom: -15px; margin-left: -200px;
         }
 
         .year-header {
@@ -154,7 +156,7 @@ export default function Tet2026FinalFix() {
           display: flex; align-items: center; justify-content: center; margin: 35px 0;
         }
 
-        .divider .hr { height: 1.5px; width: 15vw; background: #f9d479; }
+        .divider .hr { height: 1.5px; width: 18vw; background: #f9d479; }
         .divider .hny-text {
           margin: 0 20px; font-size: 1.2rem; letter-spacing: 6px;
           color: #fff; font-weight: bold;
@@ -167,7 +169,7 @@ export default function Tet2026FinalFix() {
         }
 
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
+          from { opacity: 0; transform: translateY(30px); }
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
