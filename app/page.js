@@ -1,56 +1,79 @@
 'use client';
 
 export default function Home() {
-  const botLink = "https://t.me/8299092137"; // Link tới con Bot của bác
+  const botLink = "https://t.me/8299092137"; // Link tới Telegram Bot của bác
 
   return (
     <div style={{
       height: '100vh',
       display: 'flex',
+      flexDirection: 'column',
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: '#050505',
-      backgroundImage: `
-        radial-gradient(circle at 20% 30%, rgba(0, 124, 240, 0.15) 0%, transparent 40%),
-        radial-gradient(circle at 80% 70%, rgba(0, 223, 216, 0.15) 0%, transparent 40%)
-      `,
-      fontFamily: '-apple-system, system-ui, sans-serif',
+      background: 'radial-gradient(circle at center, #8B0000 0%, #2a0000 100%)', // Màu đỏ rượu vang sang trọng
+      color: '#fff',
+      fontFamily: '"Inter", -apple-system, sans-serif',
       margin: 0,
-      overflow: 'hidden'
+      overflow: 'hidden',
+      position: 'relative'
     }}>
-      {/* Khung kính mờ (Glassmorphism Card) */}
+      
+      {/* Hiệu ứng hoa mai rơi (nhẹ nhàng, không làm rối mắt) */}
+      <div className="petals-container" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+        {[...Array(15)].map((_, i) => (
+          <div key={i} className="petal" style={{
+            position: 'absolute',
+            left: `${Math.random() * 100}%`,
+            animationDelay: `${Math.random() * 5}s`,
+            opacity: 0.6
+          }}>🌸</div>
+        ))}
+      </div>
+
+      {/* Nội dung chính */}
       <div style={{
-        padding: '60px 80px',
-        background: 'rgba(255, 255, 255, 0.03)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderRadius: '32px',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
         textAlign: 'center',
-        animation: 'slideUp 1s ease-out'
+        zIndex: 1,
+        padding: '40px',
+        border: '1px solid rgba(255, 215, 0, 0.2)', // Viền vàng kim mờ
+        borderRadius: '24px',
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        backdropFilter: 'blur(10px)'
       }}>
+        <p style={{ letterSpacing: '0.5em', fontSize: '0.9rem', color: '#FFD700', marginBottom: '10px' }}>
+          HAPPY LUNAR NEW YEAR
+        </p>
+        
         <h1 style={{
-          fontSize: '4.5rem',
-          fontWeight: '800',
+          fontSize: 'clamp(2.5rem, 8vw, 5rem)',
+          fontWeight: '900',
           margin: 0,
-          background: 'linear-gradient(180deg, #FFFFFF 0%, #A2A2A2 100%)',
+          background: 'linear-gradient(to bottom, #FFD700, #B8860B)', // Gradient vàng kim
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
-          letterSpacing: '-0.04em'
+          textShadow: '0 10px 20px rgba(0,0,0,0.5)'
         }}>
-          Welcome
+          2026
         </h1>
-        
-        <p style={{
-          color: '#888',
-          fontSize: '1.1rem',
-          marginTop: '15px',
-          fontWeight: '400',
-          maxWidth: '300px',
-          lineHeight: '1.6'
+
+        <h2 style={{
+          fontSize: '1.5rem',
+          fontWeight: '300',
+          marginTop: '10px',
+          color: '#f0f0f0'
         }}>
-          Hệ thống rút gọn liên kết thông minh đã sẵn sàng phục vụ bạn.
+          Chúc Mừng Năm Mới
+        </h2>
+
+        <div style={{
+          width: '50px',
+          height: '2px',
+          background: '#FFD700',
+          margin: '30px auto'
+        }}></div>
+
+        <p style={{ color: '#ccc', fontSize: '1.1rem', fontStyle: 'italic' }}>
+          "An Khang Thịnh Vượng • Vạn Sự Như Ý"
         </p>
 
         {/* Nút bấm tinh tế */}
@@ -60,27 +83,33 @@ export default function Home() {
           rel="noopener noreferrer"
           style={{
             display: 'inline-block',
-            marginTop: '35px',
-            padding: '12px 28px',
-            background: '#fff',
+            marginTop: '40px',
+            padding: '14px 35px',
+            background: 'linear-gradient(45deg, #FFD700, #DAA520)',
             color: '#000',
-            borderRadius: '12px',
-            fontSize: '0.95rem',
-            fontWeight: '600',
+            borderRadius: '50px',
+            fontSize: '1rem',
+            fontWeight: '700',
             textDecoration: 'none',
-            transition: 'all 0.3s ease'
+            boxShadow: '0 10px 20px rgba(218, 165, 32, 0.3)',
+            transition: 'transform 0.3s'
           }}
         >
-          Trải nghiệm ngay ⚡
+          Khai Xuân Rút Lộc 🧧
         </a>
       </div>
 
       <style jsx global>{`
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes fall {
+          0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+          10% { opacity: 1; }
+          100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
         }
-        body { margin: 0; }
+        .petal {
+          font-size: 20px;
+          animation: fall 10s linear infinite;
+        }
+        body { margin: 0; background: #000; }
       `}</style>
     </div>
   );
