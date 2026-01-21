@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
 import { createClient } from '@supabase/supabase-js'
 
-// Setup Supabase
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -10,13 +9,13 @@ const supabase = createClient(
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
-  
-  // NẾU LÀ API HOẶC HỆ THỐNG THÌ CHO QUA LUÔN - KHÔNG ĐƯỢC CHẶN HAY REDIRECT
+
+  // ƯU TIÊN SỐ 1: BỎ QUA TẤT CẢ API VÀ HỆ THỐNG
   if (
-    pathname.startsWith('/api') || 
+    pathname.includes('/api/') || 
     pathname.startsWith('/_next') || 
-    pathname === '/favicon.ico' || 
-    pathname === '/'
+    pathname === '/' || 
+    pathname === '/favicon.ico'
   ) {
     return NextResponse.next();
   }
@@ -24,26 +23,21 @@ export async function middleware(request) {
   const slug = pathname.slice(1);
 
   try {
-    // 1. KIỂM TRA REDIS (CACHE)
     const cachedUrl = await kv.get(slug);
-    if (cachedUrl) {
-      return NextResponse.redirect(new URL(cachedUrl));
-    }
+    if (cachedUrl) return NextResponse.redirect(new URL(cachedUrl));
 
-    // 2. KIỂM TRA SUPABASE
     const { data } = await supabase
       .from('links')
       .select('original_url')
       .eq('slug', slug)
       .single();
 
-    if (data && data.original_url) {
-      // 3. LƯU LẠI VÀO REDIS (Cache 1 tiếng)
+    if (data?.original_url) {
       await kv.set(slug, data.original_url, { ex: 3600 });
       return NextResponse.redirect(new URL(data.original_url));
     }
-  } catch (error) {
-    console.error('Lỗi Middleware:', error);
+  } catch (e) {
+    console.error(e);
   }
 
   return NextResponse.next();
