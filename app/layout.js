@@ -1,11 +1,9 @@
 // app/layout.js
-
-// QUAN TRỌNG: Dòng này để gọi file CSS vào
-import './globals.css'; 
+import './globals.css'; // <--- KHÔNG CÓ DÒNG NÀY LÀ NÓ SẼ BỊ TRẮNG
 
 export const metadata = {
-  title: 'Welcome System',
-  description: 'Access Point',
+  title: 'Welcome',
+  description: 'System Entry',
 }
 
 export default function RootLayout({ children }) {
