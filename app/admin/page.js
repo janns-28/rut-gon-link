@@ -9,9 +9,10 @@ export default function AdminDashboard() {
   useEffect(() => { fetchLinks(); }, []);
 
   async function fetchLinks() {
-    const { data, error } = await supabase.from('links').select('*').order('created_at', { ascending: false });
+    // BỎ phần .order('created_at') để tránh lỗi column does not exist
+    const { data, error } = await supabase.from('links').select('*');
     if (error) {
-      setErrorMsg(error.message); // Hiện lỗi nếu Supabase chặn
+      setErrorMsg(error.message);
     } else {
       setLinks(data);
     }
@@ -19,18 +20,20 @@ export default function AdminDashboard() {
 
   return (
     <div style={{ backgroundColor: '#000', color: '#fff', minHeight: '100vh', padding: '20px' }}>
-      <h1>Quản Lý Liên Kết</h1>
+      <h1>Quản Lý Liên Kết 📊</h1>
       {errorMsg && <p style={{ color: 'red' }}>Lỗi: {errorMsg}</p>}
-      <table border="1" style={{ width: '100%', borderColor: '#333' }}>
+      <table border="1" style={{ width: '100%', borderColor: '#333', textAlign: 'left' }}>
         <thead>
-          <tr><th>Mã</th><th>Link Gốc</th><th>Ngày tạo</th></tr>
+          <tr style={{ color: '#FFD700' }}>
+            <th style={{ padding: '10px' }}>Mã (Slug)</th>
+            <th style={{ padding: '10px' }}>Link Gốc</th>
+          </tr>
         </thead>
         <tbody>
           {links.map(l => (
             <tr key={l.id}>
-              <td>{l.slug}</td>
-              <td>{l.original_url}</td>
-              <td>{new Date(l.created_at).toLocaleDateString()}</td>
+              <td style={{ padding: '10px' }}>{l.slug}</td>
+              <td style={{ padding: '10px' }}>{l.original_url}</td>
             </tr>
           ))}
         </tbody>
