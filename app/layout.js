@@ -1,5 +1,5 @@
 export const metadata = {
-  title: 'NHS',
+  title: '2026',
   description: 'Rut gon link sieu toc',
 }
 
