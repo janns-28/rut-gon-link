@@ -1,11 +1,11 @@
 export const metadata = {
-  title: '2026',
-  description: 'Rut gon link sieu toc',
+  title: 'Chúc Mừng Năm Mới 2026',
+  description: 'Xuân Bính Ngọ - Vạn Sự Như Ý',
 }
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="vi">
       <body>{children}</body>
     </html>
   )
