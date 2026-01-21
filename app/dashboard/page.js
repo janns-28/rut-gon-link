@@ -8,7 +8,7 @@ import Link from 'next/link';
 // URL Google Sheet của mày (Lấy từ middleware.js)
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRn2N1dQ2i7RfA9cwW3g-tIKHd1soMoJGc3HaZv9rhdzDUPSCdtZy9W0QSGwopcV15bDDPld82GQ-oB/pub?output=csv'; 
 // Link Google Sheet gốc (Dùng để sửa dữ liệu - mày thay link edit của mày vào đây nếu muốn)
-const EDIT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1w.../edit'; 
+const EDIT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1jTU5WYB_4g2qQzoK0X44ckOHG8zBIqMXh8jXY-RwBcY/edit?gid=0#gid=0'; 
 
 export default function Dashboard() {
   const [data, setData] = useState([]);
