@@ -1,15 +1,27 @@
 // app/layout.js
-import './globals.css'; // <--- KHÔNG CÓ DÒNG NÀY LÀ NÓ SẼ BỊ TRẮNG
-
 export const metadata = {
   title: 'Welcome',
-  description: 'System Entry',
 }
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      {/* Ép cứng màu nền đen và full màn hình ngay tại đây */}
+      <body style={{
+        backgroundColor: '#000000',
+        color: '#ffffff',
+        margin: 0,
+        padding: 0,
+        height: '100vh',
+        width: '100vw',
+        overflow: 'hidden',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      }}>
+        {children}
+      </body>
     </html>
   )
 }
