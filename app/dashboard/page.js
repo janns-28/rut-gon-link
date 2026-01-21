@@ -8,7 +8,7 @@ import Link from 'next/link';
 // URL Google Sheet của mày
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRn2N1dQ2i7RfA9cwW3g-tIKHd1soMoJGc3HaZv9rhdzDUPSCdtZy9W0QSGwopcV15bDDPld82GQ-oB/pub?output=csv'; 
 // Link để sửa file (Thay link edit của mày vào đây)
-const EDIT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1jTU5WYB_4g2qQzoK0X44ckOHG8zBIqMXh8jXY-RwBcY/edit?gid=0#gid=0'; 
+const EDIT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1jTU5WYB_4g2qQzoK0X44ckOHG8zBIqMXh8jXY-RwBcY/edit?usp=sharing'; 
 
 export default function Dashboard() {
   const [data, setData] = useState([]);
