@@ -17,7 +17,6 @@ export default function Welcome() {
       </div>
 
       <style jsx>{`
-        /* Chỉ giữ lại style cho layout và hiệu ứng, bỏ phần body đi */
         .wrapper {
           position: relative;
           height: 100vh;
@@ -25,6 +24,7 @@ export default function Welcome() {
           display: flex;
           align-items: center;
           justify-content: center;
+          overflow: hidden;
         }
 
         .glow-bg {
@@ -56,6 +56,7 @@ export default function Welcome() {
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           animation: fadeIn 1.5s ease-out;
+          font-family: system-ui, -apple-system, sans-serif;
         }
 
         .action-wrapper {
@@ -67,6 +68,7 @@ export default function Welcome() {
         .enter-btn {
           color: #888;
           text-decoration: none;
+          font-family: system-ui, -apple-system, sans-serif;
           font-size: 1rem;
           text-transform: uppercase;
           letter-spacing: 2px;
