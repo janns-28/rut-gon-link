@@ -1,3 +1,4 @@
+// app/page.js
 'use client';
 
 import Link from 'next/link';
@@ -5,10 +6,12 @@ import Link from 'next/link';
 export default function Welcome() {
   return (
     <div className="wrapper">
+      {/* Hiệu ứng đốm sáng nền */}
       <div className="glow-bg"></div>
       
       <div className="content">
         <h1 className="title">Welcome.</h1>
+        
         <div className="action-wrapper">
           <Link href="/dashboard" className="enter-btn">
             Enter System
@@ -52,11 +55,13 @@ export default function Welcome() {
           font-weight: 800;
           margin: 0;
           letter-spacing: -4px;
-          background: linear-gradient(to bottom, #fff, #666);
+          /* Hiệu ứng chữ gradient kim loại */
+          background: linear-gradient(to bottom, #ffffff 0%, #666666 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
+          
           animation: fadeIn 1.5s ease-out;
-          font-family: system-ui, -apple-system, sans-serif;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
         .action-wrapper {
@@ -68,21 +73,23 @@ export default function Welcome() {
         .enter-btn {
           color: #888;
           text-decoration: none;
-          font-family: system-ui, -apple-system, sans-serif;
+          font-family: -apple-system, BlinkMacSystemFont, sans-serif;
           font-size: 1rem;
           text-transform: uppercase;
           letter-spacing: 2px;
-          padding: 10px 20px;
+          padding: 12px 24px;
           border: 1px solid rgba(255,255,255,0.1);
           border-radius: 4px;
           transition: all 0.3s ease;
+          background: transparent;
+          cursor: pointer;
         }
 
         .enter-btn:hover {
           color: #fff;
           border-color: #fff;
           background: rgba(255,255,255,0.05);
-          box-shadow: 0 0 20px rgba(255,255,255,0.2);
+          box-shadow: 0 0 20px rgba(255,255,255,0.15);
         }
 
         @keyframes fadeIn {
