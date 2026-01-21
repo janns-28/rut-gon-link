@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '../../../lib/supabase';
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
