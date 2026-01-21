@@ -1,91 +1,51 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase'; // Đảm bảo đường dẫn này đúng với file supabase của bác
+import React, { useEffect, useRef } from 'react';
 
-export default function AdminDashboard() {
-  const [links, setLinks] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // Lấy dữ liệu từ Supabase
+export default function TetFinal() {
+  const canvasRef = useRef(null);
   useEffect(() => {
-    fetchLinks();
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x; this.y = y; this.color = color;
+        this.velocity = { x: (Math.random() - 0.5) * 8, y: (Math.random() - 0.5) * 8 };
+        this.alpha = 1; this.friction = 0.95;
+      }
+      draw() {
+        ctx.save(); ctx.globalAlpha = this.alpha;
+        ctx.beginPath(); ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = this.color; ctx.fill(); ctx.restore();
+      }
+      update() { this.velocity.x *= this.friction; this.velocity.y *= this.friction; this.x += this.velocity.x; this.y += this.velocity.y; this.alpha -= 0.012; }
+    }
+    const animate = () => {
+      requestAnimationFrame(animate);
+      ctx.fillStyle = 'rgba(165, 29, 29, 0.2)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      particles.forEach((p, i) => { if (p.alpha > 0) { p.update(); p.draw(); } else { particles.splice(i, 1); } });
+      if (Math.random() < 0.05) {
+        const x = Math.random() * canvas.width; const y = Math.random() * canvas.height * 0.4;
+        const color = `hsl(${Math.random() * 40 + 40}, 100%, 65%)`;
+        for (let i = 0; i < 40; i++) particles.push(new Particle(x, y, color));
+      }
+    };
+    window.addEventListener('resize', resize); resize(); animate();
+    return () => window.removeEventListener('resize', resize);
   }, []);
 
-  async function fetchLinks() {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('links')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Lỗi lấy dữ liệu:', error);
-    } else {
-      setLinks(data);
-    }
-    setLoading(false);
-  }
-
-  // Hàm copy link nhanh
-  const copyToClipboard = (slug) => {
-    const fullLink = `${window.location.origin}/${slug}`;
-    navigator.clipboard.writeText(fullLink);
-    alert('Đã copy: ' + fullLink);
-  };
-
   return (
-    <div style={{
-      minHeight: '100vh', backgroundColor: '#0f0f0f', color: '#efefef',
-      padding: '40px', fontFamily: 'sans-serif'
-    }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-          <h1 style={{ fontSize: '2rem', color: '#FFD700' }}>Quản Lý Liên Kết 📊</h1>
-          <button onClick={fetchLinks} style={{
-            padding: '10px 20px', backgroundColor: '#333', color: '#fff',
-            border: '1px solid #444', borderRadius: '8px', cursor: 'pointer'
-          }}> Làm mới </button>
-        </div>
-
-        {loading ? (
-          <p>Đang tải dữ liệu...</p>
-        ) : (
-          <div style={{ overflowX: 'auto', backgroundColor: '#1a1a1a', borderRadius: '12px', border: '1px solid #333' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid #333', backgroundColor: '#252525' }}>
-                  <th style={{ padding: '15px' }}>Ngày tạo</th>
-                  <th style={{ padding: '15px' }}>Mã (Slug)</th>
-                  <th style={{ padding: '15px' }}>Link gốc</th>
-                  <th style={{ padding: '15px' }}>Hành động</th>
-                </tr>
-              </thead>
-              <tbody>
-                {links.map((link) => (
-                  <tr key={link.id} style={{ borderBottom: '1px solid #222' }}>
-                    <td style={{ padding: '15px', color: '#888', fontSize: '0.9rem' }}>
-                      {new Date(link.created_at).toLocaleString('vi-VN')}
-                    </td>
-                    <td style={{ padding: '15px', fontWeight: 'bold', color: '#007cf0' }}>
-                      {link.slug}
-                    </td>
-                    <td style={{ padding: '15px', maxWidth: '400px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#aaa' }}>
-                      {link.original_url}
-                    </td>
-                    <td style={{ padding: '15px' }}>
-                      <button 
-                        onClick={() => copyToClipboard(link.slug)}
-                        style={{ padding: '6px 12px', backgroundColor: '#007cf0', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                      > Copy Link </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {links.length === 0 && <p style={{ textAlign: 'center', padding: '20px' }}>Chưa có link nào được tạo.</p>}
-          </div>
-        )}
+    <div className="tet-container">
+      <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0 }} />
+      <div className="main-content" style={{ position: 'relative', zIndex: 10, textAlign: 'center', color: '#f9d479' }}>
+        <h1 style={{ fontSize: '5rem', margin: 0 }}>XUÂN BÍNH NGỌ 2026</h1>
+        <p style={{ fontSize: '1.5rem', color: '#fff' }}>Vạn Sự Như Ý • An Khang Thịnh Vượng</p>
       </div>
+      <style jsx global>{`
+        body { margin: 0; background-color: #a51d1d; overflow: hidden; font-family: sans-serif; }
+        .tet-container { height: 100vh; width: 100vw; display: flex; justify-content: center; align-items: center; }
+      `}</style>
     </div>
   );
 }
