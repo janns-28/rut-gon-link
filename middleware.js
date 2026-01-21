@@ -11,8 +11,7 @@ const supabase = createClient(
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
   
-  // --- DÒNG QUAN TRỌNG NHẤT ---
-  // Nếu là yêu cầu đến API hoặc hệ thống thì cho qua luôn, không kiểm tra link rút gọn
+  // NẾU LÀ API HOẶC TRANG CHỦ THÌ CHO QUA LUÔN - KHÔNG CHẶN
   if (
     pathname.startsWith('/api') || 
     pathname.startsWith('/_next') || 
@@ -39,12 +38,12 @@ export async function middleware(request) {
       .single();
 
     if (data && data.original_url) {
-      // 3. LƯU LẠI VÀO REDIS
+      // 3. LƯU LẠI VÀO REDIS (Cache 1 tiếng)
       await kv.set(slug, data.original_url, { ex: 3600 });
       return NextResponse.redirect(new URL(data.original_url));
     }
   } catch (error) {
-    console.error('Middleware error:', error);
+    console.error('Lỗi Middleware:', error);
   }
 
   return NextResponse.next();
