@@ -5,74 +5,67 @@ import Link from 'next/link';
 
 export default function Welcome() {
   return (
-    <div className="container">
-      <div className="glow"></div>
-      
-      <div className="content">
-        <h1 className="title">Welcome.</h1>
-        <Link href="/dashboard" className="btn">
-          Enter System
-        </Link>
-      </div>
+    // Tao dùng thẻ main bọc nội dung, style trực tiếp
+    <main style={{
+      textAlign: 'center',
+      position: 'relative',
+      zIndex: 1
+    }}>
+      {/* Hiệu ứng đốm sáng nền (Vẽ bằng div thuần) */}
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '600px',
+        height: '600px',
+        background: 'radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0) 70%)',
+        pointerEvents: 'none',
+        zIndex: -1
+      }}></div>
 
-      <style jsx>{`
-        .container {
-          position: relative;
-          height: 100vh;
-          width: 100vw;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
+      {/* Tiêu đề */}
+      <h1 style={{
+        fontSize: '5rem',
+        fontWeight: '800',
+        margin: '0 0 40px 0',
+        letterSpacing: '-3px',
+        color: 'white', // Fallback nếu gradient lỗi
+        background: '-webkit-linear-gradient(#fff, #666)', // Gradient cho webkit
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+      }}>
+        Welcome.
+      </h1>
 
-        .glow {
-          position: absolute;
-          width: 600px;
-          height: 600px;
-          background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0) 70%);
-          transform: translate(-50%, -50%);
-          top: 50%;
-          left: 50%;
-          pointer-events: none;
-        }
-
-        .content {
-          z-index: 10;
-          text-align: center;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-
-        .title {
-          font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-          font-size: 5rem;
-          font-weight: 800;
-          margin-bottom: 2rem;
-          letter-spacing: -2px;
-          background: linear-gradient(to bottom, #fff, #666);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .btn {
-          font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-          color: #999;
-          text-decoration: none;
-          text-transform: uppercase;
-          letter-spacing: 2px;
-          border: 1px solid rgba(255,255,255,0.2);
-          padding: 12px 30px;
-          border-radius: 4px;
-          transition: all 0.3s;
-        }
-
-        .btn:hover {
-          color: #fff;
-          border-color: #fff;
-          background: rgba(255,255,255,0.1);
-        }
-      `}</style>
-    </div>
+      {/* Nút bấm */}
+      <Link href="/dashboard" style={{
+        display: 'inline-block',
+        color: '#aaaaaa',
+        textDecoration: 'none',
+        border: '1px solid rgba(255,255,255,0.2)',
+        padding: '15px 40px',
+        borderRadius: '50px',
+        textTransform: 'uppercase',
+        letterSpacing: '3px',
+        fontSize: '0.9rem',
+        transition: '0.2s',
+        backgroundColor: 'transparent'
+      }} 
+      // Thêm chút hiệu ứng hover bằng JS inline đơn giản
+      onMouseOver={(e) => {
+        e.currentTarget.style.color = 'white';
+        e.currentTarget.style.borderColor = 'white';
+        e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+      }}
+      onMouseOut={(e) => {
+        e.currentTarget.style.color = '#aaaaaa';
+        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+        e.currentTarget.style.backgroundColor = 'transparent';
+      }}
+      >
+        Enter System
+      </Link>
+    </main>
   );
 }
