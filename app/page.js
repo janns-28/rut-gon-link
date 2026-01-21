@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
 
-export default function Tet2026() {
+export default function TetBinhNgo2026() {
   const canvasRef = useRef(null);
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -10,30 +10,30 @@ export default function Tet2026() {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     let particles = [];
-    let fireworks = [];
 
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };
 
-    class Particle {
-      constructor(x, y, color, velocity) {
+    // --- PHÁO HOA ---
+    class FireworkParticle {
+      constructor(x, y, color) {
         this.x = x;
         this.y = y;
         this.color = color;
-        this.velocity = velocity;
+        this.velocity = { x: (Math.random() - 0.5) * 12, y: (Math.random() - 0.5) * 12 };
         this.alpha = 1;
-        this.friction = 0.96;
-        this.gravity = 0.15;
+        this.friction = 0.95;
+        this.gravity = 0.2;
       }
       draw() {
         ctx.save();
         ctx.globalAlpha = this.alpha;
         ctx.beginPath();
-        ctx.arc(this.x, this.y, 1.5, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
         ctx.fillStyle = this.color;
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 15;
         ctx.shadowColor = this.color;
         ctx.fill();
         ctx.restore();
@@ -49,21 +49,14 @@ export default function Tet2026() {
     }
 
     const createFirework = (x, y) => {
-      const colors = ['#FFD700', '#FFA500', '#FF4500', '#FF0000', '#FFF'];
+      const colors = ['#FFD700', '#FF4500', '#FF0000', '#FFFFFF', '#FF69B4'];
       const color = colors[Math.floor(Math.random() * colors.length)];
-      for (let i = 0; i < 60; i++) {
-        const angle = (Math.PI * 2) / 60 * i;
-        const speed = Math.random() * 6 + 2;
-        particles.push(new Particle(x, y, color, {
-          x: Math.cos(angle) * speed,
-          y: Math.sin(angle) * speed
-        }));
-      }
+      for (let i = 0; i < 50; i++) particles.push(new FireworkParticle(x, y, color));
     };
 
     const animate = () => {
       requestAnimationFrame(animate);
-      ctx.fillStyle = 'rgba(26, 0, 0, 0.15)'; // Nền đỏ sâu lắng
+      ctx.fillStyle = 'rgba(20, 0, 0, 0.2)'; // Nền đỏ sẫm chiều sâu
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       particles.forEach((p, i) => {
@@ -75,93 +68,108 @@ export default function Tet2026() {
         }
       });
 
-      if (Math.random() < 0.04) createFirework(Math.random() * canvas.width, Math.random() * canvas.height * 0.6);
-    };
-
-    const handleInteraction = () => {
-      if (!isPlaying && audioRef.current) {
-        audioRef.current.play().catch(() => {});
-        setIsPlaying(true);
-      }
+      if (Math.random() < 0.05) createFirework(Math.random() * canvas.width, Math.random() * canvas.height * 0.6);
     };
 
     window.addEventListener('resize', resize);
-    window.addEventListener('mousedown', handleInteraction);
     resize();
     animate();
-    return () => {
-      window.removeEventListener('resize', resize);
-      window.removeEventListener('mousedown', handleInteraction);
-    };
-  }, [isPlaying]);
+    return () => window.removeEventListener('resize', resize);
+  }, []);
+
+  const startTết = () => {
+    if (audioRef.current && !isPlaying) {
+      audioRef.current.play().catch(() => {});
+      setIsPlaying(true);
+    }
+  };
 
   return (
-    <div style={{
+    <div onClick={startTết} style={{
       height: '100vh', width: '100vw', backgroundColor: '#1a0000',
       margin: 0, overflow: 'hidden', position: 'relative',
       display: 'flex', justifyContent: 'center', alignItems: 'center',
-      fontFamily: '"Montserrat", sans-serif', cursor: 'crosshair'
+      fontFamily: '"Montserrat", sans-serif', cursor: 'pointer'
     }}>
       <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0 }} />
       
-      {/* Nhạc Xuân không lời cực sang */}
+      {/* Nhạc Xuân tuyển chọn */}
       <audio ref={audioRef} loop>
-        <source src="https://cdn.pixabay.com/audio/2022/10/14/audio_3334c9196b.mp3" type="audio/mpeg" />
+        <source src="https://cdn.pixabay.com/audio/2024/01/15/audio_5b35c02b3c.mp3" type="audio/mpeg" />
       </audio>
 
-      {/* Trang trí góc: Câu đối & Họa tiết mây */}
-      <div className="decoration" style={{ top: '5%', left: '5%', animation: 'float 4s ease-in-out infinite' }}>🧧</div>
-      <div className="decoration" style={{ top: '5%', right: '5%', animation: 'float 4s ease-in-out infinite reverse' }}>🧧</div>
+      {/* --- HIỆU ỨNG HOA MAI RƠI --- */}
+      <div className="mai-container">
+        {[...Array(20)].map((_, i) => (
+          <div key={i} className="mai-flower" style={{
+            left: `${Math.random() * 100}%`,
+            animationDelay: `${Math.random() * 10}s`,
+            animationDuration: `${Math.random() * 5 + 5}s`
+          }}>🌼</div>
+        ))}
+      </div>
 
-      {/* Nội dung trung tâm */}
+      {/* NỘI DUNG CHÍNH */}
       <div style={{
         position: 'relative', zIndex: 10, textAlign: 'center',
-        background: 'rgba(255, 255, 255, 0.02)', backdropFilter: 'blur(8px)',
-        padding: '80px 100px', borderRadius: '40px',
-        border: '1px solid rgba(255, 215, 0, 0.3)',
-        boxShadow: '0 0 100px rgba(0,0,0,0.8)'
+        background: 'rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(10px)',
+        padding: '60px 80px', borderRadius: '50px',
+        border: '2px solid rgba(255, 215, 0, 0.4)',
+        boxShadow: '0 0 100px rgba(255, 0, 0, 0.3)'
       }}>
-        <p style={{ letterSpacing: '0.6em', fontSize: '1rem', color: '#FFD700', marginBottom: '20px', textTransform: 'uppercase' }}>
-          Lunar New Year Celebration
+        <p style={{ letterSpacing: '0.8em', fontSize: '0.9rem', color: '#FFD700', marginBottom: '20px' }}>
+          MỪNG XUÂN BÍNH NGỌ
         </p>
         
         <h1 style={{
-          fontSize: '150px', margin: '0', fontWeight: '900',
-          background: 'linear-gradient(to bottom, #FFD700 20%, #B8860B 80%)',
+          fontSize: 'clamp(5rem, 15vw, 10rem)', margin: '0', fontWeight: '900',
+          background: 'linear-gradient(to bottom, #FFEFD5, #FFD700, #DAA520)',
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          lineHeight: '0.9', filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.5))'
+          lineHeight: '0.8', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.8))'
         }}>
           2026
         </h1>
 
-        <div style={{ fontSize: '2.5rem', color: '#fff', fontWeight: '200', marginTop: '10px', letterSpacing: '10px' }}>
-          BÍNH NGỌ
+        <div style={{ fontSize: '2.5rem', color: '#fff', fontWeight: '200', marginTop: '20px', letterSpacing: '8px' }}>
+          AN KHANG THỊNH VƯỢNG
         </div>
 
         <div style={{
-          margin: '40px auto', width: '300px', height: '1px',
+          margin: '30px auto', width: '200px', height: '2px',
           background: 'linear-gradient(90deg, transparent, #FFD700, transparent)'
         }}></div>
 
-        <p style={{
-          fontSize: '1.8rem', color: '#f0f0f0', fontWeight: '300',
-          fontStyle: 'italic', textShadow: '0 2px 10px rgba(0,0,0,0.5)'
-        }}>
-          Chúc Mừng Năm Mới
+        <p style={{ fontSize: '1.4rem', color: '#FFD700', fontWeight: '300', fontStyle: 'italic' }}>
+          {isPlaying ? '🌸 Nhạc Xuân Đang Phát...' : '🧧 Bấm vào màn hình để Khai Xuân!'}
         </p>
-
-        <div style={{ marginTop: '30px', color: '#888', fontSize: '0.9rem', letterSpacing: '2px' }}>
-          {isPlaying ? 'SOUND ON • ENJOY THE MOMENT' : 'TAP ANYWHERE TO PLAY MUSIC'}
-        </div>
       </div>
 
+      {/* LỒNG ĐÈN ĐUNG ĐƯA */}
+      <div className="lantern-box" style={{ left: '50px' }}>🏮</div>
+      <div className="lantern-box" style={{ right: '50px' }}>🏮</div>
+
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@200;900&display=swap');
-        @keyframes float {
-          0%, 100% { transform: translateY(0) rotate(0); }
-          50% { transform: translateY(-20px) rotate(5deg); }
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap');
+        
+        .mai-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        .mai-flower {
+          position: absolute; top: -50px; font-size: 25px;
+          animation: fall linear infinite;
         }
-        .decoration { position: absolute; font-size: 60px; filter: drop-shadow(0 0 20px #ff0000); }
+        @keyframes fall {
+          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+        @keyframes swing {
+          0% { transform: rotate(-10deg); }
+          100% { transform: rotate(10deg); }
+        }
+        .lantern-box {
+          position: absolute; top: 0; font-size: 60px;
+          animation: swing 2s ease-in-out infinite alternate;
+          transform-origin: top center;
+          filter: drop-shadow(0 0 20px #ff0000);
+        }
         body { margin: 0; background: #000; overflow: hidden; }
       `}</style>
     </div>
