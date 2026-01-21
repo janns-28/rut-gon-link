@@ -1,8 +1,9 @@
 'use client';
 import React, { useEffect, useRef } from 'react';
 
-export default function TetFinal() {
+export default function TetFinalFix() {
   const canvasRef = useRef(null);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -37,14 +38,26 @@ export default function TetFinal() {
 
   return (
     <div className="tet-container">
-      <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0 }} />
-      <div className="main-content" style={{ position: 'relative', zIndex: 10, textAlign: 'center', color: '#f9d479' }}>
-        <h1 style={{ fontSize: '5rem', margin: 0 }}>XUÂN BÍNH NGỌ 2026</h1>
-        <p style={{ fontSize: '1.5rem', color: '#fff' }}>Vạn Sự Như Ý • An Khang Thịnh Vượng</p>
+      <canvas ref={canvasRef} className="fireworks" />
+      <div className="main-content">
+        <h3 className="script-text">Chúc mừng</h3>
+        <div className="year-header">
+          <h1 className="title-text">XUÂN BÍNH NGỌ</h1>
+          <div className="box-2026"><span>20</span><div className="line"></div><span>26</span></div>
+        </div>
+        <p className="wish-text">Chúc Quý khách cùng gia đình một mùa xuân an khang, thịnh vượng!</p>
       </div>
       <style jsx global>{`
-        body { margin: 0; background-color: #a51d1d; overflow: hidden; font-family: sans-serif; }
-        .tet-container { height: 100vh; width: 100vw; display: flex; justify-content: center; align-items: center; }
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:wght@900&display=swap');
+        body { margin: 0; background-color: #a51d1d; overflow: hidden; }
+        .tet-container { height: 100vh; width: 100vw; display: flex; justify-content: center; align-items: center; position: relative; }
+        .fireworks { position: absolute; top: 0; left: 0; }
+        .main-content { position: relative; z-index: 10; text-align: center; color: #f9d479; }
+        .script-text { font-family: 'Dancing Script', cursive; font-size: 4rem; margin: 0; margin-left: -150px; }
+        .year-header { display: flex; align-items: center; gap: 20px; }
+        .title-text { font-family: 'Playfair Display', serif; font-size: 6rem; margin: 0; }
+        .box-2026 { border: 2px solid #f9d479; padding: 5px; border-radius: 5px; display: flex; flex-direction: column; font-weight: bold; }
+        .box-2026 .line { height: 2px; background: #f9d479; margin: 2px 0; }
       `}</style>
     </div>
   );
