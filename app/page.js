@@ -6,7 +6,6 @@ import Link from 'next/link';
 export default function Welcome() {
   return (
     <div className="container">
-      {/* Glow effect */}
       <div className="glow"></div>
       
       <div className="content">
@@ -18,12 +17,12 @@ export default function Welcome() {
 
       <style jsx>{`
         .container {
+          position: relative;
+          height: 100vh;
+          width: 100vw;
           display: flex;
           align-items: center;
           justify-content: center;
-          height: 100vh;
-          width: 100vw;
-          position: relative;
         }
 
         .glow {
@@ -31,6 +30,9 @@ export default function Welcome() {
           width: 600px;
           height: 600px;
           background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0) 70%);
+          transform: translate(-50%, -50%);
+          top: 50%;
+          left: 50%;
           pointer-events: none;
         }
 
@@ -43,30 +45,32 @@ export default function Welcome() {
         }
 
         .title {
+          font-family: -apple-system, BlinkMacSystemFont, sans-serif;
           font-size: 5rem;
           font-weight: 800;
-          margin-bottom: 30px;
-          letter-spacing: -3px;
+          margin-bottom: 2rem;
+          letter-spacing: -2px;
           background: linear-gradient(to bottom, #fff, #666);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         }
 
         .btn {
+          font-family: -apple-system, BlinkMacSystemFont, sans-serif;
           color: #999;
           text-decoration: none;
+          text-transform: uppercase;
+          letter-spacing: 2px;
           border: 1px solid rgba(255,255,255,0.2);
           padding: 12px 30px;
           border-radius: 4px;
-          text-transform: uppercase;
-          letter-spacing: 2px;
           transition: all 0.3s;
         }
 
         .btn:hover {
           color: #fff;
           border-color: #fff;
-          background: rgba(255,255,255,0.05);
+          background: rgba(255,255,255,0.1);
         }
       `}</style>
     </div>
