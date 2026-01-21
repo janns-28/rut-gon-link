@@ -11,6 +11,7 @@
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "papaparse": "latest"
+    "papaparse": "latest",
+    "@vercel/kv": "latest" 
   }
 }
