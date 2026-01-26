@@ -46,6 +46,7 @@ export async function POST(request) {
 
     return NextResponse.json({ ok: true });
   } catch (e) {
+    console.error("LỖI TELEGRAM BOT:", e); // Thêm dòng này để in lỗi ra xem
     return NextResponse.json({ ok: true });
   }
 }
