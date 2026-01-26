@@ -40,7 +40,7 @@ export async function POST(request) {
       // Nếu có lỗi, Bot sẽ nhắn tin báo lỗi cụ thể để mình biết đường sửa
       await sendMessage(chatId, `⚠️ Lỗi Database: ${error.message}`);
     } else {
-      const domain = request.headers.get('host') || 'new-loan-info.online';
+      const domain = request.headers.get('host') || 'binhtienti.online';
       await sendMessage(chatId, `✅ Đã xong!\n👉 https://${domain}/${slug}`);
     }
 
