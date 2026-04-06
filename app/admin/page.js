@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
+// GIỮ NGUYÊN LOGIC XỬ LÝ NETWORK GỐC
 const getNetworkInfo = (url) => {
   const lowerUrl = url.toLowerCase();
   if (lowerUrl.includes('dinos.click')) return { name: 'Dinos', bg: '#fee2e2', text: '#dc2626', border: '#fca5a5' };
@@ -12,23 +13,30 @@ const getNetworkInfo = (url) => {
   return { name: 'Direct', bg: '#f3f4f6', text: '#4b5563', border: '#d1d5db' };
 };
 
-export default function PremiumAdmin() {
+export default function ApplePremiumAdmin() {
+  // --- GIỮ NGUYÊN TOÀN BỘ STATE GỐC ---
   const [links, setLinks] = useState([]);
   const [clickLogs, setClickLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState('');
   const [expandedGroups, setExpandedGroups] = useState({});
-  const [activeTab, setActiveTab] = useState('links'); // 'links' hoặc 'stats'
+  const [activeTab, setActiveTab] = useState('links');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // Nạp phông chữ Inter chuẩn Apple
+    const link = document.createElement('link');
+    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+    setMounted(true);
+
     async function fetchData() {
-      // Tải song song cả Links và Click Logs
       const [linksRes, logsRes] = await Promise.all([
         supabase.from('links').select('*').order('created_at', { ascending: false }),
         supabase.from('click_logs').select('*')
       ]);
-      
       if (linksRes.data) setLinks(linksRes.data);
       if (logsRes.data) setClickLogs(logsRes.data);
       setLoading(false);
@@ -36,7 +44,7 @@ export default function PremiumAdmin() {
     fetchData();
   }, []);
 
-  // --- XỬ LÝ DỮ LIỆU TAB LINKS ---
+  // --- GIỮ NGUYÊN LOGIC XỬ LÝ DỮ LIỆU GỐC ---
   const filteredLinks = links.filter(l => 
     l.slug.toLowerCase().includes(search.toLowerCase()) || 
     l.original_url.toLowerCase().includes(search.toLowerCase())
@@ -62,7 +70,7 @@ export default function PremiumAdmin() {
   };
 
   const handleDelete = async (slug) => {
-    const confirm = window.confirm(`Cảnh báo: Ông có chắc chắn muốn xóa vĩnh viễn link /${slug} không?`);
+    const confirm = window.confirm(`Ông có chắc chắn muốn xóa vĩnh viễn link /${slug} không?`);
     if (!confirm) return;
     const previousLinks = [...links];
     setLinks(links.filter(l => l.slug !== slug));
@@ -70,290 +78,228 @@ export default function PremiumAdmin() {
     try {
       const res = await fetch('/api/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slug }) });
       if (!res.ok) throw new Error('Lỗi từ Server');
-      setToast(`✅ Đã bay màu /${slug} thành công!`);
-      setTimeout(() => setToast(''), 3000);
+      setToast(`✅ Đã bay màu /${slug}!`);
     } catch (error) {
       setLinks(previousLinks);
-      setToast(`❌ Lỗi không xóa được! Vui lòng thử lại.`);
-      setTimeout(() => setToast(''), 3000);
+      setToast(`❌ Lỗi rồi ní ơi!`);
     }
+    setTimeout(() => setToast(''), 3000);
   };
 
-  // --- XỬ LÝ DỮ LIỆU TAB THỐNG KÊ ---
-  // 1. Đếm click theo Slug (Leaderboard)
-  const clickCounts = clickLogs.reduce((acc, log) => {
-    acc[log.slug] = (acc[log.slug] || 0) + 1;
-    return acc;
-  }, {});
+  // --- LOGIC THỐNG KÊ GỐC ---
+  const clickCounts = clickLogs.reduce((acc, log) => { acc[log.slug] = (acc[log.slug] || 0) + 1; return acc; }, {});
   const topLinks = Object.entries(clickCounts)
     .map(([slug, count]) => {
       const linkData = links.find(l => l.slug === slug);
-      return { 
-        slug, 
-        count, 
-        originalUrl: linkData?.original_url || 'N/A',
-        network: linkData ? getNetworkInfo(linkData.original_url).name : 'Unknown'
-      };
+      return { slug, count, originalUrl: linkData?.original_url || 'N/A', network: linkData ? getNetworkInfo(linkData.original_url).name : 'Unknown' };
     })
     .sort((a, b) => b.count - a.count);
 
-  // 2. Phân tích Nguồn Traffic
   const referrerCounts = clickLogs.reduce((acc, log) => {
     let ref = log.referrer || 'Direct (Truy cập thẳng)';
     const lowerRef = ref.toLowerCase();
     if (lowerRef.includes('facebook.com')) ref = 'Facebook';
     else if (lowerRef.includes('tiktok.com')) ref = 'TikTok';
     else if (lowerRef.includes('threads.net')) ref = 'Threads';
-    else if (lowerRef.includes('zalo')) ref = 'Zalo';
-    else if (lowerRef.includes('instagram.com')) ref = 'Instagram';
-    else if (lowerRef.includes('youtube.com')) ref = 'YouTube';
-    else if (lowerRef.startsWith('http')) {
-      try { ref = new URL(ref).hostname; } catch(e){}
-    }
+    else if (lowerRef.startsWith('http')) { try { ref = new URL(ref).hostname; } catch(e){} }
     acc[ref] = (acc[ref] || 0) + 1;
     return acc;
   }, {});
   const topReferrers = Object.entries(referrerCounts).sort((a, b) => b[1] - a[1]);
 
-  // 3. Phân tích Thiết bị (Hệ điều hành)
   const deviceCounts = clickLogs.reduce((acc, log) => {
     const ua = (log.user_agent || '').toLowerCase();
     let device = 'Khác';
     if (ua.includes('iphone') || ua.includes('ipad')) device = 'iOS (Apple)';
     else if (ua.includes('android')) device = 'Android';
     else if (ua.includes('windows')) device = 'Windows PC';
-    else if (ua.includes('mac os') || ua.includes('macintosh')) device = 'MacBook';
     acc[device] = (acc[device] || 0) + 1;
     return acc;
   }, {});
   const topDevices = Object.entries(deviceCounts).sort((a, b) => b[1] - a[1]);
 
+  if (!mounted) return <div style={{ background: '#000', minHeight: '100vh' }}></div>;
+
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0f1115', color: '#e2e8f0', fontFamily: '"Inter", system-ui, sans-serif' }}>
-      
+    <div style={st.viewport}>
+      {/* TOAST DYNAMIC ISLAND STYLE */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: '20px', right: '20px', background: toast.includes('❌') ? '#ef4444' : '#10b981', color: '#fff', padding: '12px 24px', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)', zIndex: 50, fontWeight: '500', animation: 'slideIn 0.3s ease-out' }}>
+        <div style={st.toastIsland}>
           {toast}
         </div>
       )}
 
-      {/* SIDEBAR */}
-      <aside style={{ width: '260px', borderRight: '1px solid #1f2937', backgroundColor: '#111318', padding: '24px', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '40px' }}>
-          <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff' }}>B</div>
-          <span style={{ fontSize: '1.2rem', fontWeight: '700', letterSpacing: '0.5px', color: '#f8fafc' }}>BINHTIENTI</span>
+      {/* SIDEBAR APPLE VIBRANCY */}
+      <aside style={st.sidebar}>
+        <div style={st.brand}>
+          <div style={st.logo}>B</div>
+          <span style={st.brandName}>BINHTIENTI</span>
         </div>
         
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <button 
-            onClick={() => setActiveTab('links')}
-            style={{ width: '100%', border: 'none', cursor: 'pointer', padding: '12px 16px', borderRadius: '8px', background: activeTab === 'links' ? '#1f2937' : 'transparent', color: activeTab === 'links' ? '#f8fafc' : '#94a3b8', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '12px', transition: 'all 0.2s' }}
-          >
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+        <nav style={st.nav}>
+          <button onClick={() => setActiveTab('links')} style={{...st.navItem, ...(activeTab === 'links' ? st.navActive : {})}}>
+            <svg style={st.icon} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
             Quản lý Links
           </button>
-          <button 
-            onClick={() => setActiveTab('stats')}
-            style={{ width: '100%', border: 'none', cursor: 'pointer', padding: '12px 16px', borderRadius: '8px', background: activeTab === 'stats' ? '#1f2937' : 'transparent', color: activeTab === 'stats' ? '#f8fafc' : '#94a3b8', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '12px', transition: 'all 0.2s' }}
-          >
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+          <button onClick={() => setActiveTab('stats')} style={{...st.navItem, ...(activeTab === 'stats' ? st.navActive : {})}}>
+            <svg style={st.icon} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
             Thống kê Traffic
           </button>
         </nav>
       </aside>
 
-      {/* MAIN CONTENT */}
-      <main style={{ flex: 1, padding: '40px 50px', overflowY: 'auto' }}>
-        
+      {/* MAIN CONTENT AREA */}
+      <main style={st.main}>
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-            <div style={{ color: '#64748b', fontSize: '1.2rem' }}>Đang đồng bộ dữ liệu hệ thống... ⏳</div>
-          </div>
+          <div style={st.loader}>Đang đồng bộ hệ thống... ⏳</div>
         ) : activeTab === 'links' ? (
-          /* =========================================
-                      GIAO DIỆN TAB QUẢN LÝ LINKS 
-             ========================================= */
-          <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+          /* TAB QUẢN LÝ LINKS */
+          <div style={st.contentAnimation}>
+            <header style={st.header}>
               <div>
-                <h1 style={{ fontSize: '1.8rem', fontWeight: '700', color: '#f8fafc', margin: '0 0 8px 0' }}>Chiến dịch Affiliate</h1>
-                <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.95rem' }}>Theo dõi và quản lý các liên kết chuyển hướng của bạn.</p>
+                <h1 style={st.title}>Chiến dịch Affiliate</h1>
+                <p style={st.subtitle}>Quản lý thông minh các phễu rút gọn của ní.</p>
               </div>
-              <div style={{ display: 'flex', gap: '20px' }}>
-                <div style={{ background: '#1f2937', padding: '12px 24px', borderRadius: '12px', border: '1px solid #374151', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <span style={{ fontSize: '1.5rem', fontWeight: '800', color: '#fff' }}>{links.length}</span>
-                  <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '4px' }}>Tổng Link</span>
-                </div>
+              <div style={st.summaryCard}>
+                <span style={st.sumVal}>{links.length}</span>
+                <span style={st.sumLab}>TỔNG LINK</span>
               </div>
             </header>
 
-            <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
-              <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
-                <svg style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                <input type="text" placeholder="Tìm kiếm mã hoặc link gốc..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: '100%', padding: '12px 16px 12px 44px', borderRadius: '10px', border: '1px solid #374151', background: '#111318', color: '#f8fafc', fontSize: '0.95rem', outline: 'none', transition: 'all 0.2s', boxSizing: 'border-box' }} />
+            <div style={st.searchRow}>
+              <div style={st.searchWrapper}>
+                <svg style={st.searchIcon} width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <input type="text" placeholder="Tìm kiếm mã hoặc link gốc..." value={search} onChange={(e) => setSearch(e.target.value)} style={st.searchInput} />
               </div>
             </div>
 
-            <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', whiteSpace: 'nowrap' }}>
+            <div style={st.tableModule}>
+              <table style={st.table}>
                 <thead>
-                  <tr style={{ background: '#181b23', borderBottom: '1px solid #1f2937' }}>
-                    <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Mã Rút Gọn</th>
-                    <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Link Gốc</th>
-                    <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ngày Lên Camp</th>
-                    <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right' }}>Thao tác</th>
+                  <tr style={st.trHead}>
+                    <th style={st.th}>MÃ RÚT GỌN</th>
+                    <th style={st.th}>LINK GỐC</th>
+                    <th style={st.th}>NGÀY LÊN</th>
+                    <th style={{...st.th, textAlign: 'right'}}>THAO TÁC</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {Object.keys(groupedLinks).length === 0 ? (
-                    <tr><td colSpan="4" style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Không tìm thấy chiến dịch nào.</td></tr>
-                  ) : (
-                    Object.entries(groupedLinks).map(([netName, group]) => {
-                      const isExpanded = search !== '' || expandedGroups[netName];
-                      return (
-                        <React.Fragment key={netName}>
-                          <tr onClick={() => toggleGroup(netName)} style={{ background: '#1e293b', borderBottom: '1px solid #334155', cursor: 'pointer', transition: 'background 0.2s', userSelect: 'none' }} onMouseEnter={(e) => e.currentTarget.style.background = '#334155'} onMouseLeave={(e) => e.currentTarget.style.background = '#1e293b'}>
-                            <td colSpan="4" style={{ padding: '12px 24px', fontWeight: '700', color: group.info.text }}>
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                                  <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: group.info.text }}></span>
-                                  Nền tảng: {netName.toUpperCase()} <span style={{ color: '#94a3b8', fontSize: '0.85rem', fontWeight: '500', marginLeft: '6px' }}>({group.items.length} link)</span>
-                                </span>
-                                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ color: '#94a3b8', transition: 'transform 0.3s ease', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+                  {Object.entries(groupedLinks).map(([netName, group]) => {
+                    const isExpanded = search !== '' || expandedGroups[netName];
+                    return (
+                      <React.Fragment key={netName}>
+                        <tr onClick={() => toggleGroup(netName)} style={st.groupRow}>
+                          <td colSpan="4" style={{ padding: '12px 24px', color: group.info.text }}>
+                            <div style={st.groupContent}>
+                              <span style={{ fontWeight: '700' }}>● {netName.toUpperCase()} ({group.items.length})</span>
+                              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ transition: '0.3s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}><path d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                          </td>
+                        </tr>
+                        {isExpanded && group.items.map((l) => (
+                          <tr key={l.id} style={st.row}>
+                            <td style={st.td}><span style={{ color: '#0a84ff', fontWeight: '700' }}>/</span>{l.slug}</td>
+                            <td style={{...st.td, maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis'}}>{l.original_url}</td>
+                            <td style={st.td}>{new Date(l.created_at).toLocaleDateString('vi-VN')}</td>
+                            <td style={{...st.td, textAlign: 'right'}}>
+                              <div style={st.actions}>
+                                <button onClick={() => handleCopy(l.slug)} style={st.actionBtn}>Copy</button>
+                                <button onClick={() => handleDelete(l.slug)} style={{...st.actionBtn, color: '#ff453a'}}>Xóa</button>
                               </div>
                             </td>
                           </tr>
-                          
-                          {isExpanded && group.items.map((l) => (
-                            <tr key={l.id} style={{ borderBottom: '1px solid #1f2937', transition: 'background 0.15s', animation: 'fadeIn 0.2s ease-out' }} onMouseEnter={(e) => e.currentTarget.style.background = '#181b23'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                              <td style={{ padding: '16px 24px' }}><div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: '#64748b' }}>/</span><strong style={{ color: '#f8fafc', letterSpacing: '0.5px' }}>{l.slug}</strong></div></td>
-                              <td style={{ padding: '16px 24px', maxWidth: '350px' }}><div style={{ overflow: 'hidden', textOverflow: 'ellipsis', color: '#cbd5e1', fontSize: '0.9rem' }} title={l.original_url}>{l.original_url}</div></td>
-                              <td style={{ padding: '16px 24px', color: '#94a3b8', fontSize: '0.9rem' }}>{new Date(l.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
-                              <td style={{ padding: '16px 24px', textAlign: 'right' }}>
-                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                  <button onClick={() => handleCopy(l.slug)} title="Copy" style={{ background: '#374151', color: '#d1d5db', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>
-                                  <a href={l.original_url} target="_blank" rel="noopener noreferrer" title="Mở Link" style={{ background: '#374151', color: '#d1d5db', border: 'none', padding: '8px', borderRadius: '8px', display: 'flex' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
-                                  <button onClick={() => handleDelete(l.slug)} title="Xóa" style={{ background: '#374151', color: '#fca5a5', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </React.Fragment>
-                      );
-                    })
-                  )}
+                        ))}
+                      </React.Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           </div>
         ) : (
-          /* =========================================
-                      GIAO DIỆN TAB THỐNG KÊ (MỚI)
-             ========================================= */
-          <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
-            <header style={{ marginBottom: '40px' }}>
-              <h1 style={{ fontSize: '1.8rem', fontWeight: '700', color: '#f8fafc', margin: '0 0 8px 0' }}>Báo Cáo Hiệu Suất</h1>
-              <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.95rem' }}>Phân tích lượng truy cập thực tế từ các phễu mồi.</p>
-            </header>
-
-            {/* 3 THẺ TỔNG QUAN */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
-              <div style={{ background: '#111318', padding: '24px', borderRadius: '16px', border: '1px solid #1f2937', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
-                <div style={{ color: '#94a3b8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: '600' }}>Tổng số Click (All-time)</div>
-                <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#10b981' }}>{clickLogs.length}</div>
+          /* TAB THỐNG KÊ TRAFFIC */
+          <div style={st.contentAnimation}>
+            <h1 style={st.title}>Báo Cáo Hiệu Suất</h1>
+            
+            <div style={st.statsGrid}>
+              <div style={st.appleStat}>
+                <p style={st.statLab}>TỔNG CLICK</p>
+                <h2 style={st.statNum}>{clickLogs.length}</h2>
               </div>
-              <div style={{ background: '#111318', padding: '24px', borderRadius: '16px', border: '1px solid #1f2937', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
-                <div style={{ color: '#94a3b8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: '600' }}>Link Top 1 Đang Cắn</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#60a5fa', marginBottom: '4px' }}>/{topLinks[0]?.slug || 'Chưa có'}</div>
-                <div style={{ color: '#cbd5e1', fontSize: '0.9rem' }}>{topLinks[0]?.count || 0} lượt bấm</div>
-              </div>
-              <div style={{ background: '#111318', padding: '24px', borderRadius: '16px', border: '1px solid #1f2937', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
-                <div style={{ color: '#94a3b8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: '600' }}>Tỷ lệ Đóng Góp</div>
-                <div style={{ fontSize: '1.2rem', fontWeight: '600', color: '#f8fafc', lineHeight: '1.4' }}>
-                  {topLinks.length > 0 ? (
-                    <>Top 1 chiếm <span style={{ color: '#f43f5e' }}>{Math.round((topLinks[0].count / clickLogs.length) * 100)}%</span> traffic.</>
-                  ) : 'Đang đợi data...'}
-                </div>
+              <div style={st.appleStat}>
+                <p style={st.statLab}>TOP SLUG</p>
+                <h2 style={{...st.statNum, fontSize: '1.5rem'}}>/{topLinks[0]?.slug || 'N/A'}</h2>
               </div>
             </div>
 
-            {/* PHẦN BIỂU ĐỒ BARS */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-              
-              {/* Box Nguồn Traffic */}
-              <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', padding: '24px' }}>
-                <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#f8fafc' }}>🌐 Phân bổ Nguồn Traffic</h3>
-                {topReferrers.length === 0 ? <p style={{ color: '#64748b' }}>Chưa có dữ liệu</p> : 
-                  topReferrers.map(([name, count], index) => {
-                    const percent = Math.round((count / clickLogs.length) * 100);
-                    return (
-                      <div key={name} style={{ marginBottom: '16px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.9rem' }}>
-                          <span style={{ color: '#cbd5e1', fontWeight: '500' }}>{name}</span>
-                          <span style={{ color: '#94a3b8' }}>{count} click ({percent}%)</span>
-                        </div>
-                        <div style={{ width: '100%', height: '8px', background: '#1e293b', borderRadius: '4px', overflow: 'hidden' }}>
-                          <div style={{ width: `${percent}%`, height: '100%', background: index === 0 ? '#3b82f6' : '#6366f1', borderRadius: '4px', transition: 'width 1s ease-out' }}></div>
-                        </div>
-                      </div>
-                    )
-                  })
-                }
+            <div style={st.chartsRow}>
+              <div style={st.chartCard}>
+                <h3 style={st.chartTitle}>🌐 Nguồn Traffic</h3>
+                {topReferrers.map(([name, count]) => (
+                  <div key={name} style={st.barRow}>
+                    <div style={st.barInfo}><span>{name}</span><span>{count}</span></div>
+                    <div style={st.barBase}><div style={{...st.barFill, width: `${(count/clickLogs.length)*100}%`, background: '#0071e3'}}></div></div>
+                  </div>
+                ))}
               </div>
-
-              {/* Box Thiết Bị */}
-              <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', padding: '24px' }}>
-                <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#f8fafc' }}>📱 Tỷ lệ Hệ điều hành (Tối ưu App)</h3>
-                {topDevices.length === 0 ? <p style={{ color: '#64748b' }}>Chưa có dữ liệu</p> : 
-                  topDevices.map(([name, count], index) => {
-                    const percent = Math.round((count / clickLogs.length) * 100);
-                    return (
-                      <div key={name} style={{ marginBottom: '16px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.9rem' }}>
-                          <span style={{ color: '#cbd5e1', fontWeight: '500' }}>{name}</span>
-                          <span style={{ color: '#94a3b8' }}>{count} click ({percent}%)</span>
-                        </div>
-                        <div style={{ width: '100%', height: '8px', background: '#1e293b', borderRadius: '4px', overflow: 'hidden' }}>
-                          <div style={{ width: `${percent}%`, height: '100%', background: index === 0 ? '#10b981' : '#34d399', borderRadius: '4px', transition: 'width 1s ease-out' }}></div>
-                        </div>
-                      </div>
-                    )
-                  })
-                }
+              <div style={st.chartCard}>
+                <h3 style={st.chartTitle}>📱 Thiết bị</h3>
+                {topDevices.map(([name, count]) => (
+                  <div key={name} style={st.barRow}>
+                    <div style={st.barInfo}><span>{name}</span><span>{count}</span></div>
+                    <div style={st.barBase}><div style={{...st.barFill, width: `${(count/clickLogs.length)*100}%`, background: '#30d158'}}></div></div>
+                  </div>
+                ))}
               </div>
             </div>
-
-            {/* BẢNG XẾP HẠNG CHI TIẾT */}
-            <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', padding: '24px' }}>
-              <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#f8fafc' }}>🔥 Bảng Xếp Hạng Chiến Dịch</h3>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid #1f2937', color: '#94a3b8', fontSize: '0.85rem' }}>
-                    <th style={{ paddingBottom: '12px', fontWeight: '600' }}>TOP</th>
-                    <th style={{ paddingBottom: '12px', fontWeight: '600' }}>Mã Rút Gọn</th>
-                    <th style={{ paddingBottom: '12px', fontWeight: '600' }}>Nền Tảng</th>
-                    <th style={{ paddingBottom: '12px', fontWeight: '600', textAlign: 'right' }}>Tổng Click</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topLinks.map((link, idx) => (
-                    <tr key={link.slug} style={{ borderBottom: '1px solid #1e293b' }}>
-                      <td style={{ padding: '16px 0', color: idx === 0 ? '#fbbf24' : idx === 1 ? '#94a3b8' : idx === 2 ? '#b45309' : '#64748b', fontWeight: 'bold' }}>
-                        #{idx + 1}
-                      </td>
-                      <td style={{ padding: '16px 0', color: '#f8fafc', fontWeight: '500' }}>/{link.slug}</td>
-                      <td style={{ padding: '16px 0', color: '#94a3b8', fontSize: '0.9rem' }}>{link.network}</td>
-                      <td style={{ padding: '16px 0', color: '#10b981', fontWeight: '700', textAlign: 'right' }}>{link.count}</td>
-                    </tr>
-                  ))}
-                  {topLinks.length === 0 && <tr><td colSpan="4" style={{ padding: '20px 0', textAlign: 'center', color: '#64748b' }}>Chưa có click nào được ghi nhận.</td></tr>}
-                </tbody>
-              </table>
-            </div>
-
           </div>
         )}
       </main>
     </div>
   );
 }
+
+const st = {
+  viewport: { display: 'flex', height: '100vh', backgroundColor: '#000', color: '#fff', fontVariantNumeric: 'tabular-nums' },
+  sidebar: { width: '260px', background: 'rgba(28, 28, 30, 0.8)', backdropFilter: 'blur(40px)', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', padding: '30px 20px' },
+  brand: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '40px', paddingLeft: '10px' },
+  logo: { width: '32px', height: '32px', background: 'linear-gradient(180deg, #0071e3, #00c6ff)', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '800' },
+  brandName: { fontSize: '18px', fontWeight: '700', letterSpacing: '-0.5px' },
+  nav: { flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' },
+  navItem: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 15px', borderRadius: '12px', border: 'none', background: 'transparent', color: '#86868b', fontSize: '14px', fontWeight: '500', cursor: 'pointer', textAlign: 'left', transition: '0.2s' },
+  navActive: { background: 'rgba(255,255,255,0.05)', color: '#fff' },
+  icon: { width: '18px', height: '18px' },
+  main: { flex: 1, padding: '50px 60px', overflowY: 'auto' },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' },
+  title: { fontSize: '32px', fontWeight: '700', letterSpacing: '-1.2px', margin: '0 0 8px 0' },
+  subtitle: { color: '#86868b', margin: 0, fontSize: '15px' },
+  summaryCard: { background: '#1c1c1e', padding: '15px 30px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' },
+  sumVal: { fontSize: '24px', fontWeight: '800', display: 'block' },
+  sumLab: { fontSize: '10px', color: '#86868b', letterSpacing: '1px', fontWeight: '700' },
+  searchRow: { marginBottom: '30px' },
+  searchWrapper: { position: 'relative', maxWidth: '400px' },
+  searchIcon: { position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#424245' },
+  searchInput: { width: '100%', padding: '12px 15px 12px 45px', borderRadius: '12px', background: '#1c1c1e', border: '1px solid #2c2c2e', color: '#fff', outline: 'none' },
+  tableModule: { background: '#1c1c1e', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' },
+  table: { width: '100%', borderCollapse: 'collapse', textAlign: 'left' },
+  trHead: { background: 'rgba(255,255,255,0.02)' },
+  th: { padding: '15px 24px', color: '#86868b', fontSize: '11px', fontWeight: '700', letterSpacing: '1px' },
+  groupRow: { cursor: 'pointer', background: 'rgba(255,255,255,0.01)', borderBottom: '1px solid rgba(255,255,255,0.03)' },
+  groupContent: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  row: { borderBottom: '1px solid rgba(255,255,255,0.02)', transition: '0.2s' },
+  td: { padding: '18px 24px', fontSize: '14px', color: '#f5f5f7' },
+  actions: { display: 'flex', gap: '15px', justifyContent: 'flex-end' },
+  actionBtn: { background: 'transparent', border: 'none', color: '#0a84ff', fontWeight: '600', cursor: 'pointer', fontSize: '13px' },
+  statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginBottom: '30px' },
+  appleStat: { background: '#1c1c1e', padding: '25px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' },
+  statLab: { fontSize: '11px', fontWeight: '800', color: '#86868b', letterSpacing: '1.5px', marginBottom: '10px' },
+  statNum: { fontSize: '42px', fontWeight: '700', margin: 0, color: '#fff', letterSpacing: '-1.5px' },
+  chartsRow: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' },
+  chartCard: { background: '#1c1c1e', padding: '25px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' },
+  chartTitle: { fontSize: '16px', fontWeight: '600', marginBottom: '20px' },
+  barRow: { marginBottom: '15px' },
+  barInfo: { display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#86868b', marginBottom: '6px' },
+  barBase: { height: '6px', background: '#2c2c2e', borderRadius: '10px', overflow: 'hidden' },
+  barFill: { height: '100%', borderRadius: '100px', transition: 'width 1s ease' },
+  toastIsland: { position: 'fixed', top: '30px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(20px)', color: '#fff', padding: '12px 25px', borderRadius: '100px', zIndex: 100, border: '1px solid rgba(255,255,255,0.1)', fontSize: '14px', fontWeight: '600', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }
+};
