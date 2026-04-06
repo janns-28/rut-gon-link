@@ -11,39 +11,26 @@ export async function middleware(request, event) {
   const { pathname } = request.nextUrl;
 
   // ==========================================
-  // 1. CHỐT BẢO VỆ TRANG ADMIN (HTTP BASIC AUTH)
+  // 1. KIỂM TRA QUYỀN TRUY CẬP TRANG ADMIN
   // ==========================================
   if (pathname.startsWith('/admin')) {
-    const basicAuth = request.headers.get('authorization');
+    // Moi trong túi khách ra xem có thẻ "admin_session" không
+    const session = request.cookies.get('admin_session');
     
-    if (basicAuth) {
-      const authValue = basicAuth.split(' ')[1];
-      const [user, pwd] = atob(authValue).split(':');
-      
-      // Tên đăng nhập và Mật khẩu
-      const validUser = 'binhtienti';
-      // Lấy pass từ Vercel, nếu chưa cài trên Vercel thì lấy tạm pass là 'chayso123'
-      const validPass = process.env.ADMIN_PASSWORD || 'chayso123'; 
-      
-      if (user === validUser && pwd === validPass) {
-        return NextResponse.next(); // Mật khẩu chuẩn -> Mở cổng cho sếp vào
-      }
+    // Nếu không có thẻ hoặc thẻ sai -> Đá thẳng về trang Đăng Nhập
+    if (!session || session.value !== 'true') {
+      return NextResponse.redirect(new URL('/login', request.url));
     }
-
-    // Nếu chưa nhập hoặc nhập sai -> Bật hộp thoại bắt nhập lại
-    return new NextResponse('Khu vực nội bộ! Vui lòng quay xe.', {
-      status: 401,
-      headers: { 'WWW-Authenticate': 'Basic realm="Secure Admin Area"' }
-    });
   }
 
   // ==========================================
-  // 2. BỎ QUA FILE HỆ THỐNG & API 
+  // 2. BỎ QUA FILE HỆ THỐNG & API & TRANG LOGIN
   // ==========================================
   if (
-    pathname.includes('/api/') || 
+    pathname.startsWith('/api/') || 
     pathname.startsWith('/_next') || 
     pathname === '/' || 
+    pathname === '/login' || 
     pathname === '/favicon.ico'
   ) {
     return NextResponse.next();
@@ -67,7 +54,7 @@ export async function middleware(request, event) {
     }
 
     if (targetUrl) {
-      const referrer = request.headers.get('referer') || 'Direct';
+      const referrer = request.headers.get('referer') || 'Direct (Truy cập thẳng)';
       const userAgent = request.headers.get('user-agent') || 'Unknown';
       const ip = request.headers.get('x-forwarded-for') || request.ip || 'Unknown';
 
