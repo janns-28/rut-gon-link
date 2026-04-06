@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function AppleStyleLogin() {
+export default function ModernAppleLogin() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -11,9 +11,8 @@ export default function AppleStyleLogin() {
   const router = useRouter();
 
   useEffect(() => {
-    // Nạp phông chữ Inter chuẩn Apple
     const link = document.createElement('link');
-    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap';
+    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap';
     link.rel = 'stylesheet';
     document.head.appendChild(link);
     setMounted(true);
@@ -23,82 +22,87 @@ export default function AppleStyleLogin() {
     e.preventDefault();
     setLoading(true);
     setError('');
-
     try {
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-
       const data = await res.json();
-      if (data.success) {
-        router.push('/admin');
-      } else {
-        setError(data.message || 'Thông tin không chính xác');
-      }
-    } catch (err) {
-      setError('Lỗi kết nối server');
-    } finally {
-      setLoading(false);
-    }
+      if (data.success) router.push('/admin');
+      else setError(data.message || 'Sai thông tin đăng nhập');
+    } catch (err) { setError('Lỗi kết nối hệ thống'); }
+    finally { setLoading(false); }
   };
 
   if (!mounted) return <div style={{ backgroundColor: '#000', minHeight: '100vh' }}></div>;
 
   return (
     <main style={st.viewport}>
-      {/* Mesh Gradient nền cực sâu */}
-      <div style={st.meshBG}></div>
-
-      <div style={st.loginStack}>
-        {/* Biểu tượng hoặc Tiêu đề */}
-        <header style={st.header}>
+      <div style={st.container}>
+        
+        {/* Apple Style Squircle Logo */}
+        <div style={st.logoBox}>
           <div style={st.logo}>B</div>
-          <h1 style={st.title}>Đăng nhập Hệ thống</h1>
-          <p style={st.subtitle}>Quản trị viên chiến dịch</p>
-        </header>
+        </div>
 
-        {/* Form nhập liệu */}
+        <h1 style={st.title}>Đăng nhập với ID của bạn</h1>
+        <p style={st.subtitle}>Sử dụng tài khoản quản trị để tiếp tục.</p>
+
         <form onSubmit={handleLogin} style={st.form}>
-          <div style={st.inputGroup}>
+          <div style={st.inputWrapper}>
             <input
               type="text"
               placeholder="Tài khoản"
+              style={st.input}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              style={st.input}
-              required
-            />
-            <div style={st.inputDivider}></div>
-            <input
-              type="password"
-              placeholder="Mật khẩu"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={st.input}
               required
             />
           </div>
 
-          {error && <p style={st.errorMsg}>{error}</p>}
+          <div style={st.inputWrapper}>
+            <input
+              type="password"
+              placeholder="Mật khẩu"
+              style={st.input}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
 
-          <button type="submit" disabled={loading} style={st.button}>
-            {loading ? 'Đang xác thực...' : 'Tiếp tục'}
-          </button>
+          {error && <p style={st.errorText}>{error}</p>}
+
+          <div style={st.buttonWrapper}>
+            <button type="submit" disabled={loading} style={st.button}>
+              {loading ? (
+                <div className="spinner"></div>
+              ) : (
+                <span style={st.buttonText}>Tiếp tục</span>
+              )}
+            </button>
+          </div>
         </form>
 
         <footer style={st.footer}>
-          <p style={st.footerText}>Bảo mật bởi chuẩn mã hóa Apple Style</p>
+          <a href="#" style={st.footerLink}>Quên mật khẩu?</a>
+          <div style={st.divider}></div>
+          <p style={st.footerNote}>Nền tảng quản trị chiến dịch bảo mật.</p>
         </footer>
       </div>
 
       <style jsx global>{`
-        body { margin: 0; background: #000; overflow: hidden; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
-        input:focus { outline: none; }
-        @keyframes reveal {
-          from { opacity: 0; transform: translateY(20px); filter: blur(15px); }
-          to { opacity: 1; transform: translateY(0); filter: blur(0); }
+        body { margin: 0; background: #000; font-family: 'Inter', -apple-system, sans-serif; overflow: hidden; }
+        input:focus { border-color: #0071e3 !important; box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15) !important; }
+        .spinner {
+          width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3);
+          border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: scale(0.98) translateY(10px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
         }
       `}</style>
     </main>
@@ -106,53 +110,39 @@ export default function AppleStyleLogin() {
 }
 
 const st = {
-  viewport: { height: '100vh', width: '100vw', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#000', position: 'relative' },
-  meshBG: { position: 'absolute', inset: 0, zIndex: 0, background: 'radial-gradient(at 50% 50%, #161618 0%, #000 80%)', opacity: 0.8 },
+  viewport: { height: '100vh', width: '100vw', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' },
+  container: { width: '100%', maxWidth: '340px', textAlign: 'center', animation: 'fadeIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)' },
   
-  loginStack: {
-    zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-    width: '100%', maxWidth: '380px', padding: '0 20px',
-    animation: 'reveal 1.2s cubic-bezier(0.16, 1, 0.3, 1)'
+  logoBox: { marginBottom: '30px', display: 'flex', justifyContent: 'center' },
+  logo: {
+    width: '72px', height: '72px', background: '#1d1d1f', borderRadius: '18px', // Tỉ lệ Squircle
+    display: 'flex', justifyContent: 'center', alignItems: 'center',
+    fontSize: '32px', fontWeight: '800', color: '#fff', border: '1px solid rgba(255,255,255,0.05)'
   },
 
-  header: { textAlign: 'center', marginBottom: '40px' },
-  logo: { 
-    width: '60px', height: '60px', background: 'linear-gradient(180deg, #2c2c2e 0%, #000 100%)', 
-    borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', 
-    margin: '0 auto 20px auto', fontSize: '24px', fontWeight: '800', color: '#fff',
-    border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 10px 20px rgba(0,0,0,0.3)'
-  },
-  title: { color: '#fff', fontSize: '24px', fontWeight: '600', letterSpacing: '-0.5px', margin: '0 0 8px 0' },
-  subtitle: { color: 'rgba(255,255,255,0.4)', fontSize: '14px', fontWeight: '400', margin: 0 },
+  title: { color: '#f5f5f7', fontSize: '28px', fontWeight: '600', letterSpacing: '-0.8px', margin: '0 0 12px 0' },
+  subtitle: { color: '#86868b', fontSize: '15px', fontWeight: '400', marginBottom: '40px', letterSpacing: '-0.1px' },
 
-  form: { width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' },
-  
-  // Cụm Input gộp lại kiểu iOS
-  inputGroup: {
-    width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: '14px', overflow: 'hidden', marginBottom: '20px', backdropFilter: 'blur(20px)'
-  },
+  form: { display: 'flex', flexDirection: 'column', gap: '15px' },
+  inputWrapper: { width: '100%' },
   input: {
-    width: '100%', background: 'transparent', border: 'none', padding: '16px 20px',
-    color: '#fff', fontSize: '16px', boxSizing: 'border-box', fontFamily: 'inherit'
+    width: '100%', padding: '16px 18px', borderRadius: '12px', background: '#121212',
+    border: '1px solid #424245', color: '#fff', fontSize: '16px', boxSizing: 'border-box',
+    transition: 'all 0.2s ease', fontFamily: 'inherit'
   },
-  inputDivider: { height: '1px', width: '90%', background: 'rgba(255,255,255,0.05)', margin: '0 auto' },
 
-  errorMsg: { color: '#ff453a', fontSize: '13px', fontWeight: '500', marginBottom: '15px', textAlign: 'center' },
+  errorText: { color: '#ff453a', fontSize: '13px', marginTop: '5px', fontWeight: '500' },
 
+  buttonWrapper: { marginTop: '25px', display: 'flex', justifyContent: 'center' },
   button: {
-    width: '44px', height: '44px', borderRadius: '50%', background: '#fff', border: 'none',
-    color: '#000', fontSize: '20px', cursor: 'pointer', display: 'flex', 
-    justifyContent: 'center', alignItems: 'center', transition: 'all 0.3s',
-    boxShadow: '0 4px 12px rgba(255,255,255,0.2)', fontWeight: 'bold'
+    width: '100%', padding: '16px', borderRadius: '12px', background: '#0071e3', border: 'none',
+    cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center',
+    transition: 'background 0.2s ease'
   },
-  // Tui đổi nút login thành một cái nút tròn có mũi tên (hoặc chữ Tiếp tục) cực kỳ tinh tế
-  button: {
-    width: '100%', padding: '14px', borderRadius: '14px', background: '#fff', border: 'none',
-    color: '#000', fontSize: '16px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s',
-    boxShadow: '0 4px 15px rgba(255,255,255,0.1)'
-  },
+  buttonText: { color: '#fff', fontSize: '16px', fontWeight: '600', letterSpacing: '-0.2px' },
 
-  footer: { marginTop: '60px', opacity: 0.3 },
-  footerText: { color: '#fff', fontSize: '11px', fontWeight: '500', letterSpacing: '1px', textTransform: 'uppercase' }
+  footer: { marginTop: '50px' },
+  footerLink: { color: '#0071e3', fontSize: '14px', textDecoration: 'none', fontWeight: '400' },
+  divider: { height: '1px', width: '100%', background: '#262626', margin: '25px 0' },
+  footerNote: { color: '#424245', fontSize: '12px', fontWeight: '500', letterSpacing: '0.5px' }
 };
