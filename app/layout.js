@@ -1,8 +1,8 @@
 import './globals.css'; // Dòng quan trọng nhất để diệt chớp trắng
 
 export const metadata = {
-  title: 'BINHTIENTI - Affiliate Admin',
-  description: 'Hệ thống quản lý link rút gọn chuyên nghiệp',
+  title: 'Bình Tiền Tỉ',
+  description: 'Chức mừng năm mới',
 }
 
 export default function RootLayout({ children }) {
