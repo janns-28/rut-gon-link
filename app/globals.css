@@ -1,12 +1,15 @@
-/* app/globals.css */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800;900&display=swap');
+
 html, body {
   margin: 0 !important;
   padding: 0 !important;
-  background-color: #0f1115 !important; /* Màu đen than chì của ông đây */
-  color-scheme: dark; /* Báo hiệu cho trình duyệt đây là chế độ tối */
+  background-color: #0f1115 !important;
+  color: #fff;
+  font-family: 'Poppins', sans-serif !important; /* Phông chữ mềm mại ông muốn đây */
+  overflow: hidden;
 }
 
-/* Sẵn tiện tui dọn luôn cái thanh cuộn ở đây cho đồng bộ */
+/* Scrollbar tối cho đồng bộ */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: #0f1115; }
 ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
