@@ -185,6 +185,30 @@ export default function PremiumAdmin() {
 
       </main>
       <style jsx global>{`
+        /* Triệt tiêu viền trắng mặc định của trình duyệt */
+        body { 
+          margin: 0; 
+          padding: 0; 
+          background-color: #0f1115; 
+        }
+
+        /* Độ lại thanh cuộn (Scrollbar) cho ra dáng Premium */
+        ::-webkit-scrollbar { 
+          width: 8px; 
+          height: 8px; 
+        }
+        ::-webkit-scrollbar-track { 
+          background: #0f1115; 
+        }
+        ::-webkit-scrollbar-thumb { 
+          background: #374151; 
+          border-radius: 4px; 
+        }
+        ::-webkit-scrollbar-thumb:hover { 
+          background: #4b5563; 
+        }
+
+        /* Hiệu ứng trượt của thông báo Copy */
         @keyframes slideIn {
           from { transform: translateY(100%); opacity: 0; }
           to { transform: translateY(0); opacity: 1; }
