@@ -8,20 +8,19 @@ const HOLIDAYS = {
   '30-04': 'Giải Phóng Miền Nam - Nghỉ đi, đừng cố quá.',
   '01-05': 'Quốc Tế Lao Động - Lao động là vinh quang, lang thang là hết tiền.',
   '19-05': 'Ngày sinh Bác Hồ - Mong Bác sớm về đầy ví con.',
-  '02-09': 'Quốc Khánh Việt Nam - Rực rỡ quá ní ơi!',
+  '02-09': 'Quốc Khánh Việt Nam - Rợp trời cờ hoa!',
   '24-12': 'Giáng Sinh - Ông già Noel không tặng tiền đâu, cày đi.',
   '31-12': 'Đêm Giao Thừa - Chuẩn bị tinh thần sang năm cày tiếp.'
 };
 
-export default function SmoothAmbientClock() {
+export default function CleanAmbientClock() {
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState(new Date());
-  const [dynamicQuote, setDynamicQuote] = useState(''); // ĐỂ TRỐNG BAN ĐẦU
+  const [dynamicQuote, setDynamicQuote] = useState('');
 
   useEffect(() => {
     setMounted(true);
     
-    // TỰ ĐỘNG LẤY CÂU KHÌA TỪ API
     const fetchQuote = async () => {
       try {
         const res = await fetch('/api/random-quote');
@@ -37,7 +36,6 @@ export default function SmoothAmbientClock() {
     return () => clearInterval(timer);
   }, []);
 
-  // Nếu Server đang render thì hiện màn hình đen để không bị chớp trắng
   if (!mounted) return <div style={{ backgroundColor: '#050505', minHeight: '100vh' }}></div>;
 
   const nextYear = now.getFullYear() + 1;
@@ -60,7 +58,7 @@ export default function SmoothAmbientClock() {
           {now.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
         </p>
 
-        {/* Đồng hồ lớn (Font Quicksand bo tròn) */}
+        {/* Đồng hồ chính */}
         <div style={st.clockRow}>
           <span style={st.bigNum}>{String(now.getHours()).padStart(2, '0')}</span>
           <span style={st.sep}>:</span>
@@ -69,23 +67,18 @@ export default function SmoothAmbientClock() {
           <span style={st.bigNum}>{String(now.getSeconds()).padStart(2, '0')}</span>
         </div>
 
-        {/* Vùng hiển thị Lễ hoặc Câu Khịa */}
+        {/* Vùng hiển thị Lễ hoặc Câu Khịa (Đã bỏ cái ô bao quanh) */}
         <div style={st.msgArea}>
-          {/* Chỉ hiện cái pill khi đã có dữ liệu hoặc là ngày lễ */}
-          {(holiday || dynamicQuote) && (
-            <div style={{...st.pill, opacity: (holiday || dynamicQuote) ? 1 : 0}}>
-              {holiday ? (
-                <span style={st.holidayMsg}>✨ {holiday} ✨</span>
-              ) : (
-                <span style={st.funnyMsg}>💬 {dynamicQuote}</span>
-              )}
-            </div>
+          {holiday ? (
+            <span style={st.holidayMsg}>✨ {holiday} ✨</span>
+          ) : (
+            <span style={st.funnyMsg}>{dynamicQuote ? `💬 ${dynamicQuote}` : ''}</span>
           )}
         </div>
 
         <div style={st.divider}></div>
 
-        {/* Đếm ngược cuối năm */}
+        {/* Đếm ngược */}
         <div style={st.countdownArea}>
           <p style={st.countLabel}>HÀNH TRÌNH ĐẾN NĂM MỚI {nextYear}</p>
           <div style={st.grid}>
@@ -105,16 +98,19 @@ export default function SmoothAmbientClock() {
 
 const st = {
   wrap: { height: '100vh', width: '100vw', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'radial-gradient(circle at center, #111115 0%, #050505 100%)' },
-  container: { textAlign: 'center', padding: '20px', animation: 'fadeIn 1.2s ease' },
+  container: { textAlign: 'center', padding: '20px', animation: 'fadeIn 1s ease' },
   dateStr: { color: '#6366f1', letterSpacing: '4px', fontWeight: '500', textTransform: 'uppercase', fontSize: '0.85rem', marginBottom: '15px' },
   clockRow: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' },
   bigNum: { fontSize: 'clamp(4rem, 15vw, 11rem)', fontWeight: '600', color: '#f8fafc', letterSpacing: '-2px' },
   sep: { fontSize: 'clamp(3rem, 12vw, 9rem)', fontWeight: '200', color: '#16161a', paddingBottom: '20px' },
-  msgArea: { margin: '40px 0 80px 0', display: 'flex', justifyContent: 'center', minHeight: '60px' },
-  pill: { background: 'rgba(255,255,255,0.02)', padding: '14px 28px', borderRadius: '100px', border: '1px solid rgba(255,255,255,0.05)', transition: 'opacity 0.8s ease-in' },
-  holidayMsg: { fontSize: '1.3rem', fontWeight: '700', color: '#fbbf24', textShadow: '0 0 15px rgba(251,191,36,0.3)' },
-  funnyMsg: { fontSize: '1.1rem', fontWeight: '500', color: '#64748b', fontStyle: 'italic' },
-  divider: { height: '1.5px', width: '60px', background: '#16161a', margin: '40px auto' },
+  
+  // Bỏ background, border, padding của pill cũ
+  msgArea: { margin: '30px 0 60px 0', minHeight: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center' },
+  
+  holidayMsg: { fontSize: '1.3rem', fontWeight: '700', color: '#fbbf24', textShadow: '0 0 15px rgba(251,191,36,0.3)', animation: 'fadeIn 0.8s ease' },
+  funnyMsg: { fontSize: '1.1rem', fontWeight: '500', color: '#64748b', fontStyle: 'italic', animation: 'fadeIn 0.8s ease' },
+  
+  divider: { height: '1px', width: '60px', background: '#16161a', margin: '40px auto' },
   countLabel: { fontSize: '0.7rem', color: '#334155', fontWeight: '800', letterSpacing: '5px', marginBottom: '25px' },
   grid: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '25px' },
   unit: { display: 'flex', flexDirection: 'column', minWidth: '60px' },
