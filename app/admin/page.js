@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
 const getNetworkInfo = (url) => {
@@ -27,10 +27,22 @@ export default function PremiumAdmin() {
     fetchLinks();
   }, []);
 
+  // Lọc link theo tìm kiếm
   const filteredLinks = links.filter(l => 
     l.slug.toLowerCase().includes(search.toLowerCase()) || 
     l.original_url.toLowerCase().includes(search.toLowerCase())
   );
+
+  // THUẬT TOÁN GOM NHÓM THEO NỀN TẢNG
+  const groupedLinks = filteredLinks.reduce((acc, link) => {
+    const netInfo = getNetworkInfo(link.original_url);
+    const netName = netInfo.name;
+    if (!acc[netName]) {
+      acc[netName] = { info: netInfo, items: [] };
+    }
+    acc[netName].items.push(link);
+    return acc;
+  }, {});
 
   const handleCopy = (slug) => {
     const fullUrl = `${window.location.origin}/${slug}`;
@@ -39,12 +51,10 @@ export default function PremiumAdmin() {
     setTimeout(() => setToast(''), 2500);
   };
 
-  // Hàm xử lý XÓA LINK
   const handleDelete = async (slug) => {
     const confirm = window.confirm(`Cảnh báo: Ông có chắc chắn muốn xóa vĩnh viễn link /${slug} không?`);
     if (!confirm) return;
 
-    // Ẩn tạm link trên giao diện cho mượt
     const previousLinks = [...links];
     setLinks(links.filter(l => l.slug !== slug));
     setToast(`🗑️ Đang dọn dẹp /${slug}...`);
@@ -60,7 +70,6 @@ export default function PremiumAdmin() {
       setToast(`✅ Đã bay màu /${slug} thành công!`);
       setTimeout(() => setToast(''), 3000);
     } catch (error) {
-      // Nếu lỗi thì trả lại link trên bảng
       setLinks(previousLinks);
       setToast(`❌ Lỗi không xóa được! Vui lòng thử lại.`);
       setTimeout(() => setToast(''), 3000);
@@ -138,7 +147,6 @@ export default function PremiumAdmin() {
             <thead>
               <tr style={{ background: '#181b23', borderBottom: '1px solid #1f2937' }}>
                 <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Mã Rút Gọn</th>
-                <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Nền Tảng</th>
                 <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Link Gốc</th>
                 <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ngày Lên Camp</th>
                 <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right' }}>Thao tác</th>
@@ -146,67 +154,77 @@ export default function PremiumAdmin() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="5" style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Đang đồng bộ dữ liệu...</td></tr>
-              ) : filteredLinks.length === 0 ? (
-                <tr><td colSpan="5" style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Không tìm thấy chiến dịch nào.</td></tr>
+                <tr><td colSpan="4" style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Đang đồng bộ dữ liệu...</td></tr>
+              ) : Object.keys(groupedLinks).length === 0 ? (
+                <tr><td colSpan="4" style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Không tìm thấy chiến dịch nào.</td></tr>
               ) : (
-                filteredLinks.map((l) => {
-                  const net = getNetworkInfo(l.original_url);
-                  return (
-                    <tr key={l.id} style={{ borderBottom: '1px solid #1f2937', transition: 'background 0.15s' }} onMouseEnter={(e) => e.currentTarget.style.background = '#181b23'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                      <td style={{ padding: '16px 24px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ color: '#64748b' }}>/</span>
-                          <strong style={{ color: '#f8fafc', letterSpacing: '0.5px' }}>{l.slug}</strong>
-                        </div>
-                      </td>
-                      <td style={{ padding: '16px 24px' }}>
-                        <span style={{ background: net.bg, color: net.text, border: `1px solid ${net.border}`, padding: '4px 10px', borderRadius: '999px', fontSize: '0.75rem', fontWeight: '600' }}>
-                          {net.name}
+                Object.entries(groupedLinks).map(([netName, group]) => (
+                  <React.Fragment key={netName}>
+                    {/* HÀNG TIÊU ĐỀ GOM NHÓM */}
+                    <tr style={{ background: '#1e293b', borderBottom: '1px solid #334155' }}>
+                      <td colSpan="4" style={{ padding: '12px 24px', fontWeight: '700', color: group.info.text }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: group.info.text }}></span>
+                          Nền tảng: {netName.toUpperCase()}
+                          <span style={{ color: '#94a3b8', fontSize: '0.85rem', fontWeight: '500', marginLeft: '6px' }}>
+                            ({group.items.length} link)
+                          </span>
                         </span>
                       </td>
-                      <td style={{ padding: '16px 24px', maxWidth: '300px' }}>
-                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', color: '#cbd5e1', fontSize: '0.9rem' }} title={l.original_url}>
-                          {l.original_url}
-                        </div>
-                      </td>
-                      <td style={{ padding: '16px 24px', color: '#94a3b8', fontSize: '0.9rem' }}>
-                        {new Date(l.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                      </td>
-                      <td style={{ padding: '16px 24px', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                          <button 
-                            onClick={() => handleCopy(l.slug)}
-                            title="Copy Link Rút Gọn"
-                            style={{ background: '#374151', color: '#d1d5db', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center' }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = '#4b5563'; e.currentTarget.style.color = '#fff'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = '#374151'; e.currentTarget.style.color = '#d1d5db'; }}
-                          >
-                            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                          </button>
-                          <a 
-                            href={l.original_url} target="_blank" rel="noopener noreferrer"
-                            title="Mở Link Gốc"
-                            style={{ background: '#374151', color: '#d1d5db', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', textDecoration: 'none' }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = '#4b5563'; e.currentTarget.style.color = '#fff'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = '#374151'; e.currentTarget.style.color = '#d1d5db'; }}
-                          >
-                            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                          </a>
-                          <button 
-                            onClick={() => handleDelete(l.slug)}
-                            title="Xóa Link Này"
-                            style={{ background: '#374151', color: '#fca5a5', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center' }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.color = '#fff'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = '#374151'; e.currentTarget.style.color = '#fca5a5'; }}
-                          >
-                            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                          </button>
-                        </div>
-                      </td>
                     </tr>
-                  );
-                })
+                    
+                    {/* DANH SÁCH LINK THUỘC NHÓM ĐÓ */}
+                    {group.items.map((l) => (
+                      <tr key={l.id} style={{ borderBottom: '1px solid #1f2937', transition: 'background 0.15s' }} onMouseEnter={(e) => e.currentTarget.style.background = '#181b23'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                        <td style={{ padding: '16px 24px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ color: '#64748b' }}>/</span>
+                            <strong style={{ color: '#f8fafc', letterSpacing: '0.5px' }}>{l.slug}</strong>
+                          </div>
+                        </td>
+                        <td style={{ padding: '16px 24px', maxWidth: '350px' }}>
+                          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', color: '#cbd5e1', fontSize: '0.9rem' }} title={l.original_url}>
+                            {l.original_url}
+                          </div>
+                        </td>
+                        <td style={{ padding: '16px 24px', color: '#94a3b8', fontSize: '0.9rem' }}>
+                          {new Date(l.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                        </td>
+                        <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                            <button 
+                              onClick={() => handleCopy(l.slug)}
+                              title="Copy Link Rút Gọn"
+                              style={{ background: '#374151', color: '#d1d5db', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center' }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = '#4b5563'; e.currentTarget.style.color = '#fff'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = '#374151'; e.currentTarget.style.color = '#d1d5db'; }}
+                            >
+                              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            </button>
+                            <a 
+                              href={l.original_url} target="_blank" rel="noopener noreferrer"
+                              title="Mở Link Gốc"
+                              style={{ background: '#374151', color: '#d1d5db', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', textDecoration: 'none' }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = '#4b5563'; e.currentTarget.style.color = '#fff'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = '#374151'; e.currentTarget.style.color = '#d1d5db'; }}
+                            >
+                              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                            </a>
+                            <button 
+                              onClick={() => handleDelete(l.slug)}
+                              title="Xóa Link Này"
+                              style={{ background: '#374151', color: '#fca5a5', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center' }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.color = '#fff'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = '#374151'; e.currentTarget.style.color = '#fca5a5'; }}
+                            >
+                              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </React.Fragment>
+                ))
               )}
             </tbody>
           </table>
