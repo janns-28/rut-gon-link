@@ -1,12 +1,16 @@
+import './globals.css'; // Dòng quan trọng nhất để diệt chớp trắng
+
 export const metadata = {
-  title: 'Chúc Mừng Năm Mới 2026',
-  description: 'Mừng Xuân Bính Ngọ',
+  title: 'BINHTIENTI - Affiliate Admin',
+  description: 'Hệ thống quản lý link rút gọn chuyên nghiệp',
 }
 
 export default function RootLayout({ children }) {
   return (
     <html lang="vi">
-      <body>{children}</body>
+      <body style={{ backgroundColor: '#0f1115' }}>
+        {children}
+      </body>
     </html>
   )
 }
