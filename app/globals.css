@@ -1,0 +1,13 @@
+/* app/globals.css */
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  background-color: #0f1115 !important; /* Màu đen than chì của ông đây */
+  color-scheme: dark; /* Báo hiệu cho trình duyệt đây là chế độ tối */
+}
+
+/* Sẵn tiện tui dọn luôn cái thanh cuộn ở đây cho đồng bộ */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #0f1115; }
+::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #4b5563; }
