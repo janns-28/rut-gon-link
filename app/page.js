@@ -2,20 +2,20 @@
 import React, { useState, useEffect } from 'react';
 
 const HOLIDAYS = {
-  '01-01': 'Tết Dương Lịch', '14-02': 'Valentine', '08-03': 'International Women\'s Day',
-  '30-04': 'Reunification Day', '01-05': 'Labour Day', '02-09': 'Independence Day',
-  '24-12': 'Christmas Eve', '31-12': 'New Year\'s Eve'
+  '01-01': 'Tết Dương Lịch', '14-02': 'Valentine\'s Day', '08-03': 'Quốc tế Phụ nữ',
+  '30-04': 'Giải phóng Miền Nam', '01-05': 'Quốc tế Lao động', '02-09': 'Quốc khánh Việt Nam',
+  '24-12': 'Giáng Sinh', '31-12': 'Giao Thừa'
 };
 
-export default function AppleStyleClock() {
+export default function AppleInterface() {
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState(new Date());
   const [dynamicQuote, setDynamicQuote] = useState('');
 
   useEffect(() => {
-    // Nạp phông Inter - chuẩn mực của sự chuyên nghiệp
+    // Nạp phông chữ Inter - phông chuẩn Apple giả lập
     const link = document.createElement('link');
-    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap';
+    link.href = 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap';
     link.rel = 'stylesheet';
     document.head.appendChild(link);
 
@@ -25,7 +25,7 @@ export default function AppleStyleClock() {
         const res = await fetch('/api/random-quote');
         const data = await res.json();
         if (data.quote) setDynamicQuote(data.quote);
-      } catch (e) { setDynamicQuote("Stay hungry, stay foolish."); }
+      } catch (e) { setDynamicQuote("Cày tiếp đi ní, đừng hóng hớt!"); }
     };
 
     fetchQuote();
@@ -47,122 +47,106 @@ export default function AppleStyleClock() {
   const holiday = HOLIDAYS[dayMonth];
 
   return (
-    <div style={st.viewport}>
-      {/* Mesh Gradient nền - cực sang */}
-      <div style={st.meshBG}></div>
+    <main style={st.page}>
+      {/* Nền mờ ảo kiểu Apple Mesh Gradient */}
+      <div style={st.ambientLayer}></div>
 
-      <div style={st.mainContainer}>
-        {/* Top Section: Date & Dynamic Message */}
-        <header style={st.header}>
-          <p style={st.topDate}>
-            {now.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: 'long' }).toUpperCase()}
-          </p>
-          <div style={st.statusArea}>
-            <span style={holiday ? st.holidayText : st.quoteText}>
-              {holiday ? `✦ ${holiday}` : dynamicQuote ? `“ ${dynamicQuote} ”` : ''}
-            </span>
-          </div>
-        </header>
-
-        {/* Middle Section: Hero Clock */}
-        <section style={st.clockSection}>
-          <div style={st.clockWrapper}>
-            <span style={st.timeDigit}>{String(now.getHours()).padStart(2, '0')}</span>
-            <span style={st.timeSep}>:</span>
-            <span style={st.timeDigit}>{String(now.getMinutes()).padStart(2, '0')}</span>
-            <span style={st.timeSep}>:</span>
-            <span style={st.timeDigit}>{String(now.getSeconds()).padStart(2, '0')}</span>
-          </div>
-        </section>
-
-        {/* Bottom Section: Apple Widget Style Countdown */}
-        <footer style={st.footer}>
-          <div style={st.widget}>
-            <p style={st.widgetTitle}>COUNTDOWN TO {nextYear}</p>
-            <div style={st.grid}>
-              <div style={st.gridItem}><span style={st.gridVal}>{d}</span><span style={st.gridLab}>DAYS</span></div>
-              <div style={st.gridItem}><span style={st.gridVal}>{String(h).padStart(2, '0')}</span><span style={st.gridLab}>HRS</span></div>
-              <div style={st.gridItem}><span style={st.gridVal}>{String(m).padStart(2, '0')}</span><span style={st.gridLab}>MIN</span></div>
-              <div style={st.gridItem}><span style={st.gridVal}>{String(s).padStart(2, '0')}</span><span style={st.gridLab}>SEC</span></div>
-            </div>
-          </div>
-        </footer>
+      {/* 1. DYNAMIC ISLAND (Vùng thông báo) */}
+      <div style={st.dynamicIslandContainer}>
+        <div style={st.dynamicIsland}>
+          {holiday ? (
+            <span style={st.islandTextGold}>✦ {holiday}</span>
+          ) : (
+            <span style={st.islandTextSilver}>{dynamicQuote || 'Đang đồng bộ...'}</span>
+          )}
+        </div>
       </div>
 
+      {/* 2. CHÍNH GIỮA: ĐỒNG HỒ TỐI GIẢN */}
+      <section style={st.heroSection}>
+        <p style={st.topDate}>
+          {now.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: 'long' }).toUpperCase()}
+        </p>
+        <div style={st.mainClock}>
+          <span style={st.timeText}>{String(now.getHours()).padStart(2, '0')}</span>
+          <span style={st.timeSep}>:</span>
+          <span style={st.timeText}>{String(now.getMinutes()).padStart(2, '0')}</span>
+          <span style={st.timeSep}>:</span>
+          <span style={st.timeText}>{String(now.getSeconds()).padStart(2, '0')}</span>
+        </div>
+      </section>
+
+      {/* 3. DƯỚI CÙNG: COUNTDOWN WIDGET */}
+      <footer style={st.footer}>
+        <div style={st.widget}>
+          <p style={st.widgetHeader}>HÀNH TRÌNH ĐẾN {nextYear}</p>
+          <div style={st.grid}>
+            <div style={st.gridItem}><span style={st.gVal}>{d}</span><span style={st.gLab}>NGÀY</span></div>
+            <div style={st.gSep}></div>
+            <div style={st.gridItem}><span style={st.gVal}>{String(h).padStart(2, '0')}</span><span style={st.gLab}>GIỜ</span></div>
+            <div style={st.gSep}></div>
+            <div style={st.gridItem}><span style={st.gVal}>{String(m).padStart(2, '0')}</span><span style={st.gLab}>PHÚT</span></div>
+            <div style={st.gSep}></div>
+            <div style={st.gridItem}><span style={st.gVal}>{String(s).padStart(2, '0')}</span><span style={st.gLab}>GIÂY</span></div>
+          </div>
+        </div>
+      </footer>
+
       <style jsx global>{`
-        body { margin: 0; background: #000; overflow: hidden; }
-        @keyframes clockIn {
-          from { opacity: 0; transform: scale(0.95) translateY(20px); filter: blur(10px); }
-          to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'Inter', -apple-system, sans-serif; }
+        @keyframes islandPop {
+          0% { transform: scaleX(0.8) translateY(-20px); opacity: 0; }
+          100% { transform: scaleX(1) translateY(0); opacity: 1; }
         }
-        @keyframes textReveal {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes clockBlur {
+          from { filter: blur(20px); opacity: 0; transform: scale(1.1); }
+          to { filter: blur(0); opacity: 1; transform: scale(1); }
         }
       `}</style>
-    </div>
+    </main>
   );
 }
 
 const st = {
-  viewport: { 
-    height: '100vh', width: '100vw', position: 'relative', 
-    backgroundColor: '#000', display: 'flex', overflow: 'hidden',
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
-  },
-  meshBG: {
+  page: { height: '100vh', width: '100vw', position: 'relative', display: 'flex', flexDirection: 'column', color: '#fff', overflow: 'hidden' },
+  ambientLayer: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    background: `
-      radial-gradient(at 0% 0%, hsla(253,16%,12%,1) 0, transparent 50%), 
-      radial-gradient(at 100% 0%, hsla(225,39%,15%,1) 0, transparent 50%),
-      radial-gradient(at 50% 100%, hsla(253,16%,7%,1) 0, transparent 50%)
-    `,
-    zIndex: 1
+    background: 'radial-gradient(circle at 50% -20%, #1c1c1e 0%, #000 70%)',
+    zIndex: -1
   },
-  mainContainer: {
-    position: 'relative', zIndex: 2, width: '100%', 
-    display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-    padding: '60px 40px', boxSizing: 'border-box'
+  dynamicIslandContainer: { width: '100%', display: 'flex', justifyContent: 'center', paddingTop: '40px' },
+  dynamicIsland: {
+    background: '#121212',
+    padding: '10px 25px',
+    borderRadius: '100px',
+    border: '1px solid rgba(255,255,255,0.1)',
+    minWidth: '200px',
+    textAlign: 'center',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+    animation: 'islandPop 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)'
   },
-  header: { textAlign: 'center', animation: 'textReveal 1s ease-out' },
-  topDate: { 
-    color: 'rgba(255,255,255,0.4)', fontSize: '13px', fontWeight: '700', 
-    letterSpacing: '5px', margin: '0 0 15px 0' 
-  },
-  statusArea: { minHeight: '30px', display: 'flex', justifyContent: 'center', alignItems: 'center' },
-  quoteText: { 
-    color: '#fff', fontSize: '17px', fontWeight: '400', 
-    letterSpacing: '-0.2px', opacity: 0.8, fontStyle: 'italic'
-  },
-  holidayText: { 
-    color: '#fff', fontSize: '18px', fontWeight: '600', 
-    background: 'linear-gradient(90deg, #ff7e5f, #feb47b)',
-    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
-  },
-  clockSection: { 
-    flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center',
-    animation: 'clockIn 1.2s cubic-bezier(0.16, 1, 0.3, 1)'
-  },
-  clockWrapper: { display: 'flex', alignItems: 'baseline', gap: '8px' },
-  timeDigit: { 
-    fontSize: 'clamp(5rem, 18vw, 14rem)', fontWeight: '800', color: '#fff', 
-    letterSpacing: '-8px', lineHeight: '1' 
-  },
-  timeSep: { 
-    fontSize: 'clamp(3rem, 10vw, 8rem)', fontWeight: '300', color: 'rgba(255,255,255,0.1)',
-    position: 'relative', top: '-10px'
-  },
-  footer: { display: 'flex', justifyContent: 'center', animation: 'textReveal 1.5s ease-out' },
+  islandTextSilver: { color: '#8e8e93', fontSize: '13px', fontWeight: '500', letterSpacing: '-0.2px' },
+  islandTextGold: { color: '#ffd60a', fontSize: '14px', fontWeight: '700' },
+  
+  heroSection: { flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', animation: 'clockBlur 1.5s ease-out' },
+  topDate: { color: '#0a84ff', fontSize: '12px', fontWeight: '700', letterSpacing: '4px', marginBottom: '10px' },
+  mainClock: { display: 'flex', alignItems: 'center', gap: '5px' },
+  timeText: { fontSize: 'clamp(5rem, 20vw, 15rem)', fontWeight: '700', letterSpacing: '-10px', color: '#fff' },
+  timeSep: { fontSize: 'clamp(3rem, 15vw, 10rem)', fontWeight: '200', color: 'rgba(255,255,255,0.1)', marginBottom: '20px' },
+
+  footer: { paddingBottom: '60px', display: 'flex', justifyContent: 'center' },
   widget: {
-    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: '32px', padding: '30px 60px', backdropFilter: 'blur(20px)'
+    background: 'rgba(28, 28, 30, 0.5)',
+    backdropFilter: 'blur(30px)',
+    borderRadius: '35px',
+    padding: '25px 50px',
+    border: '1px solid rgba(255,255,255,0.05)',
+    textAlign: 'center'
   },
-  widgetTitle: { 
-    fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', 
-    letterSpacing: '4px', margin: '0 0 20px 0', textAlign: 'center' 
-  },
-  grid: { display: 'flex', gap: '40px', alignItems: 'center' },
-  gridItem: { display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '60px' },
-  gridVal: { fontSize: '32px', fontWeight: '700', color: '#fff', letterSpacing: '-1px' },
-  gridLab: { fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.2)', marginTop: '8px', letterSpacing: '1px' }
+  widgetHeader: { fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', letterSpacing: '3px', marginBottom: '15px' },
+  grid: { display: 'flex', alignItems: 'center', gap: '30px' },
+  gridItem: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
+  gVal: { fontSize: '28px', fontWeight: '600', color: '#fff', letterSpacing: '-1px' },
+  gLab: { fontSize: '9px', fontWeight: '800', color: 'rgba(255,255,255,0.2)', marginTop: '4px' },
+  gSep: { height: '30px', width: '1px', background: 'rgba(255,255,255,0.1)' }
 };
