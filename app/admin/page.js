@@ -80,11 +80,11 @@ export default function PremiumAdmin() {
   };
 
   // --- XỬ LÝ DỮ LIỆU TAB THỐNG KÊ ---
+  // 1. Đếm click theo Slug (Leaderboard)
   const clickCounts = clickLogs.reduce((acc, log) => {
     acc[log.slug] = (acc[log.slug] || 0) + 1;
     return acc;
   }, {});
-
   const topLinks = Object.entries(clickCounts)
     .map(([slug, count]) => {
       const linkData = links.find(l => l.slug === slug);
@@ -97,6 +97,7 @@ export default function PremiumAdmin() {
     })
     .sort((a, b) => b.count - a.count);
 
+  // 2. Phân tích Nguồn Traffic
   const referrerCounts = clickLogs.reduce((acc, log) => {
     let ref = log.referrer || 'Direct (Truy cập thẳng)';
     const lowerRef = ref.toLowerCase();
@@ -114,6 +115,7 @@ export default function PremiumAdmin() {
   }, {});
   const topReferrers = Object.entries(referrerCounts).sort((a, b) => b[1] - a[1]);
 
+  // 3. Phân tích Thiết bị (Hệ điều hành)
   const deviceCounts = clickLogs.reduce((acc, log) => {
     const ua = (log.user_agent || '').toLowerCase();
     let device = 'Khác';
@@ -162,11 +164,15 @@ export default function PremiumAdmin() {
 
       {/* MAIN CONTENT */}
       <main style={{ flex: 1, padding: '40px 50px', overflowY: 'auto' }}>
+        
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
             <div style={{ color: '#64748b', fontSize: '1.2rem' }}>Đang đồng bộ dữ liệu hệ thống... ⏳</div>
           </div>
         ) : activeTab === 'links' ? (
+          /* =========================================
+                      GIAO DIỆN TAB QUẢN LÝ LINKS 
+             ========================================= */
           <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
               <div>
@@ -199,44 +205,152 @@ export default function PremiumAdmin() {
                   </tr>
                 </thead>
                 <tbody>
-                  {Object.entries(groupedLinks).map(([netName, group]) => {
-                    const isExpanded = search !== '' || expandedGroups[netName];
-                    return (
-                      <React.Fragment key={netName}>
-                        <tr onClick={() => toggleGroup(netName)} style={{ background: '#1e293b', cursor: 'pointer' }}>
-                          <td colSpan="4" style={{ padding: '12px 24px', fontWeight: '700', color: group.info.text }}>
-                            {netName.toUpperCase()} ({group.items.length} link)
-                          </td>
-                        </tr>
-                        {isExpanded && group.items.map((l) => (
-                          <tr key={l.id} style={{ borderBottom: '1px solid #1f2937' }}>
-                            <td style={{ padding: '16px 24px' }}>/{l.slug}</td>
-                            <td style={{ padding: '16px 24px', maxWidth: '350px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.original_url}</td>
-                            <td style={{ padding: '16px 24px' }}>{new Date(l.created_at).toLocaleDateString('vi-VN')}</td>
-                            <td style={{ padding: '16px 24px', textAlign: 'right' }}>
-                              <button onClick={() => handleCopy(l.slug)}>Copy</button>
-                              <button onClick={() => handleDelete(l.slug)} style={{ color: '#fca5a5', marginLeft: '10px' }}>Xóa</button>
+                  {Object.keys(groupedLinks).length === 0 ? (
+                    <tr><td colSpan="4" style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Không tìm thấy chiến dịch nào.</td></tr>
+                  ) : (
+                    Object.entries(groupedLinks).map(([netName, group]) => {
+                      const isExpanded = search !== '' || expandedGroups[netName];
+                      return (
+                        <React.Fragment key={netName}>
+                          <tr onClick={() => toggleGroup(netName)} style={{ background: '#1e293b', borderBottom: '1px solid #334155', cursor: 'pointer', transition: 'background 0.2s', userSelect: 'none' }} onMouseEnter={(e) => e.currentTarget.style.background = '#334155'} onMouseLeave={(e) => e.currentTarget.style.background = '#1e293b'}>
+                            <td colSpan="4" style={{ padding: '12px 24px', fontWeight: '700', color: group.info.text }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                  <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: group.info.text }}></span>
+                                  Nền tảng: {netName.toUpperCase()} <span style={{ color: '#94a3b8', fontSize: '0.85rem', fontWeight: '500', marginLeft: '6px' }}>({group.items.length} link)</span>
+                                </span>
+                                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ color: '#94a3b8', transition: 'transform 0.3s ease', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+                              </div>
                             </td>
                           </tr>
-                        ))}
-                      </React.Fragment>
-                    );
-                  })}
+                          
+                          {isExpanded && group.items.map((l) => (
+                            <tr key={l.id} style={{ borderBottom: '1px solid #1f2937', transition: 'background 0.15s', animation: 'fadeIn 0.2s ease-out' }} onMouseEnter={(e) => e.currentTarget.style.background = '#181b23'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                              <td style={{ padding: '16px 24px' }}><div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: '#64748b' }}>/</span><strong style={{ color: '#f8fafc', letterSpacing: '0.5px' }}>{l.slug}</strong></div></td>
+                              <td style={{ padding: '16px 24px', maxWidth: '350px' }}><div style={{ overflow: 'hidden', textOverflow: 'ellipsis', color: '#cbd5e1', fontSize: '0.9rem' }} title={l.original_url}>{l.original_url}</div></td>
+                              <td style={{ padding: '16px 24px', color: '#94a3b8', fontSize: '0.9rem' }}>{new Date(l.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
+                              <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                  <button onClick={() => handleCopy(l.slug)} title="Copy" style={{ background: '#374151', color: '#d1d5db', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>
+                                  <a href={l.original_url} target="_blank" rel="noopener noreferrer" title="Mở Link" style={{ background: '#374151', color: '#d1d5db', border: 'none', padding: '8px', borderRadius: '8px', display: 'flex' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
+                                  <button onClick={() => handleDelete(l.slug)} title="Xóa" style={{ background: '#374151', color: '#fca5a5', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </React.Fragment>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
         ) : (
-          /* THỐNG KÊ TRAFFIC */
+          /* =========================================
+                      GIAO DIỆN TAB THỐNG KÊ (MỚI)
+             ========================================= */
           <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
-            <h1 style={{ fontSize: '1.8rem', fontWeight: '700', color: '#f8fafc', marginBottom: '40px' }}>Báo Cáo Hiệu Suất</h1>
+            <header style={{ marginBottom: '40px' }}>
+              <h1 style={{ fontSize: '1.8rem', fontWeight: '700', color: '#f8fafc', margin: '0 0 8px 0' }}>Báo Cáo Hiệu Suất</h1>
+              <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.95rem' }}>Phân tích lượng truy cập thực tế từ các phễu mồi.</p>
+            </header>
+
+            {/* 3 THẺ TỔNG QUAN */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
-              <div style={{ background: '#111318', padding: '24px', borderRadius: '16px', border: '1px solid #1f2937' }}>
-                <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Tổng số Click</div>
+              <div style={{ background: '#111318', padding: '24px', borderRadius: '16px', border: '1px solid #1f2937', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                <div style={{ color: '#94a3b8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: '600' }}>Tổng số Click (All-time)</div>
                 <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#10b981' }}>{clickLogs.length}</div>
               </div>
+              <div style={{ background: '#111318', padding: '24px', borderRadius: '16px', border: '1px solid #1f2937', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                <div style={{ color: '#94a3b8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: '600' }}>Link Top 1 Đang Cắn</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#60a5fa', marginBottom: '4px' }}>/{topLinks[0]?.slug || 'Chưa có'}</div>
+                <div style={{ color: '#cbd5e1', fontSize: '0.9rem' }}>{topLinks[0]?.count || 0} lượt bấm</div>
+              </div>
+              <div style={{ background: '#111318', padding: '24px', borderRadius: '16px', border: '1px solid #1f2937', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                <div style={{ color: '#94a3b8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: '600' }}>Tỷ lệ Đóng Góp</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: '600', color: '#f8fafc', lineHeight: '1.4' }}>
+                  {topLinks.length > 0 ? (
+                    <>Top 1 chiếm <span style={{ color: '#f43f5e' }}>{Math.round((topLinks[0].count / clickLogs.length) * 100)}%</span> traffic.</>
+                  ) : 'Đang đợi data...'}
+                </div>
+              </div>
             </div>
-            {/* Các thành phần phân tích traffic khác tương tự file page.js */}
+
+            {/* PHẦN BIỂU ĐỒ BARS */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
+              
+              {/* Box Nguồn Traffic */}
+              <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', padding: '24px' }}>
+                <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#f8fafc' }}>🌐 Phân bổ Nguồn Traffic</h3>
+                {topReferrers.length === 0 ? <p style={{ color: '#64748b' }}>Chưa có dữ liệu</p> : 
+                  topReferrers.map(([name, count], index) => {
+                    const percent = Math.round((count / clickLogs.length) * 100);
+                    return (
+                      <div key={name} style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#cbd5e1', fontWeight: '500' }}>{name}</span>
+                          <span style={{ color: '#94a3b8' }}>{count} click ({percent}%)</span>
+                        </div>
+                        <div style={{ width: '100%', height: '8px', background: '#1e293b', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div style={{ width: `${percent}%`, height: '100%', background: index === 0 ? '#3b82f6' : '#6366f1', borderRadius: '4px', transition: 'width 1s ease-out' }}></div>
+                        </div>
+                      </div>
+                    )
+                  })
+                }
+              </div>
+
+              {/* Box Thiết Bị */}
+              <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', padding: '24px' }}>
+                <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#f8fafc' }}>📱 Tỷ lệ Hệ điều hành (Tối ưu App)</h3>
+                {topDevices.length === 0 ? <p style={{ color: '#64748b' }}>Chưa có dữ liệu</p> : 
+                  topDevices.map(([name, count], index) => {
+                    const percent = Math.round((count / clickLogs.length) * 100);
+                    return (
+                      <div key={name} style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#cbd5e1', fontWeight: '500' }}>{name}</span>
+                          <span style={{ color: '#94a3b8' }}>{count} click ({percent}%)</span>
+                        </div>
+                        <div style={{ width: '100%', height: '8px', background: '#1e293b', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div style={{ width: `${percent}%`, height: '100%', background: index === 0 ? '#10b981' : '#34d399', borderRadius: '4px', transition: 'width 1s ease-out' }}></div>
+                        </div>
+                      </div>
+                    )
+                  })
+                }
+              </div>
+            </div>
+
+            {/* BẢNG XẾP HẠNG CHI TIẾT */}
+            <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', padding: '24px' }}>
+              <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#f8fafc' }}>🔥 Bảng Xếp Hạng Chiến Dịch</h3>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #1f2937', color: '#94a3b8', fontSize: '0.85rem' }}>
+                    <th style={{ paddingBottom: '12px', fontWeight: '600' }}>TOP</th>
+                    <th style={{ paddingBottom: '12px', fontWeight: '600' }}>Mã Rút Gọn</th>
+                    <th style={{ paddingBottom: '12px', fontWeight: '600' }}>Nền Tảng</th>
+                    <th style={{ paddingBottom: '12px', fontWeight: '600', textAlign: 'right' }}>Tổng Click</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topLinks.map((link, idx) => (
+                    <tr key={link.slug} style={{ borderBottom: '1px solid #1e293b' }}>
+                      <td style={{ padding: '16px 0', color: idx === 0 ? '#fbbf24' : idx === 1 ? '#94a3b8' : idx === 2 ? '#b45309' : '#64748b', fontWeight: 'bold' }}>
+                        #{idx + 1}
+                      </td>
+                      <td style={{ padding: '16px 0', color: '#f8fafc', fontWeight: '500' }}>/{link.slug}</td>
+                      <td style={{ padding: '16px 0', color: '#94a3b8', fontSize: '0.9rem' }}>{link.network}</td>
+                      <td style={{ padding: '16px 0', color: '#10b981', fontWeight: '700', textAlign: 'right' }}>{link.count}</td>
+                    </tr>
+                  ))}
+                  {topLinks.length === 0 && <tr><td colSpan="4" style={{ padding: '20px 0', textAlign: 'center', color: '#64748b' }}>Chưa có click nào được ghi nhận.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+
           </div>
         )}
       </main>
