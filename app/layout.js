@@ -1,7 +1,7 @@
 import './globals.css'; // Dòng quan trọng nhất để diệt chớp trắng
 
 export const metadata = {
-  title: 'Bình Tiền Tỉ',
+  title: 'Bình tiền tỉ',
   description: 'Chức mừng năm mới',
 }
 
