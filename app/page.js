@@ -2,19 +2,20 @@
 import React, { useState, useEffect } from 'react';
 
 const HOLIDAYS = {
-  '01-01': 'Tết Dương Lịch', '14-02': 'Valentine\'s Day', '08-03': 'Quốc tế Phụ nữ',
-  '30-04': 'Giải phóng Miền Nam', '01-05': 'Quốc tế Lao động', '02-09': 'Quốc khánh Việt Nam',
-  '24-12': 'Giáng Sinh', '31-12': 'Giao Thừa'
+  '01-01': 'New Year\'s Day', '14-02': 'Valentine\'s Day', '08-03': 'Women\'s Day',
+  '30-04': 'Reunification', '01-05': 'Labour Day', '02-09': 'Independence Day',
+  '24-12': 'Christmas', '31-12': 'New Year\'s Eve'
 };
 
-export default function AppleUnifiedClock() {
+export default function AppleMasterpiece() {
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState(new Date());
   const [dynamicQuote, setDynamicQuote] = useState('');
 
   useEffect(() => {
+    // Nạp phông Inter & tinh chỉnh để giống SF Pro nhất có thể
     const link = document.createElement('link');
-    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;600;700;800;900&display=swap';
+    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap';
     link.rel = 'stylesheet';
     document.head.appendChild(link);
 
@@ -47,57 +48,67 @@ export default function AppleUnifiedClock() {
 
   return (
     <main style={st.viewport}>
-      {/* Nền Gradient mờ cực nhẹ - Chất Apple */}
-      <div style={st.backgroundEffect}></div>
+      {/* Nền Mesh Gradient cực sâu kiểu macOS Sonoma */}
+      <div style={st.meshBG}></div>
 
+      {/* 1. DYNAMIC ISLAND - CỰC KỲ THẬT */}
+      <div style={st.islandWrapper}>
+        <div style={st.dynamicIsland}>
+          <div style={st.islandContent}>
+            {holiday ? (
+              <span style={st.islandGold}>✦ {holiday}</span>
+            ) : (
+              <span style={st.islandSilver}>{dynamicQuote || 'Syncing...'}</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 2. CỤM TRUNG TÂM - LOCKSCREEN STYLE */}
       <div style={st.centralStack}>
-        
-        {/* 1. DYNAMIC ISLAND - Giờ nó là một phần của cụm chính */}
-        <div style={st.islandContainer}>
-          <div style={st.island}>
-            <span style={holiday ? st.islandGold : st.islandSilver}>
-              {holiday ? `✦ ${holiday}` : dynamicQuote ? `“ ${dynamicQuote} ”` : 'Initializing...'}
-            </span>
-          </div>
+        <p style={st.lockDate}>
+          {now.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: 'long' })}
+        </p>
+        <div style={st.lockClock}>
+          <span style={st.tDigit}>{String(now.getHours()).padStart(2, '0')}</span>
+          <span style={st.tSep}>:</span>
+          <span style={st.tDigit}>{String(now.getMinutes()).padStart(2, '0')}</span>
+          <span style={st.tSep}>:</span>
+          <span style={st.tDigit}>{String(now.getSeconds()).padStart(2, '0')}</span>
         </div>
+      </div>
 
-        {/* 2. CỤM TRUNG TÂM: DATE + CLOCK */}
-        <div style={st.heroArea}>
-          <p style={st.dateLabel}>
-            {now.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: 'long' }).toUpperCase()}
-          </p>
-          <div style={st.clockDisplay}>
-            <span style={st.timeDigit}>{String(now.getHours()).padStart(2, '0')}</span>
-            <span style={st.timeSep}>:</span>
-            <span style={st.timeDigit}>{String(now.getMinutes()).padStart(2, '0')}</span>
-            <span style={st.timeSep}>:</span>
-            <span style={st.timeDigit}>{String(now.getSeconds()).padStart(2, '0')}</span>
-          </div>
-        </div>
-
-        {/* 3. WIDGET COUNTDOWN - Gần lại để tạo sự liên kết */}
-        <div style={st.widgetContainer}>
-          <div style={st.widgetCard}>
-            <p style={st.widgetTitle}>COUNTDOWN TO {nextYear}</p>
-            <div style={st.grid}>
-              <div style={st.gridItem}><span style={st.gVal}>{d}</span><span style={st.gLab}>DAYS</span></div>
-              <div style={st.gDivider}></div>
-              <div style={st.gridItem}><span style={st.gVal}>{String(h).padStart(2, '0')}</span><span style={st.gLab}>HRS</span></div>
-              <div style={st.gDivider}></div>
-              <div style={st.gridItem}><span style={st.gVal}>{String(m).padStart(2, '0')}</span><span style={st.gLab}>MIN</span></div>
-              <div style={st.gDivider}></div>
-              <div style={st.gridItem}><span style={st.gVal}>{String(s).padStart(2, '0')}</span><span style={st.gLab}>SEC</span></div>
+      {/* 3. CONTROL CENTER WIDGETS */}
+      <div style={st.footer}>
+        <div style={st.widgetGroup}>
+          <div style={st.widget}>
+            <p style={st.wHeader}>NEW YEAR {nextYear}</p>
+            <div style={st.wGrid}>
+              <div style={st.wItem}><span style={st.wVal}>{d}</span><span style={st.wLab}>D</span></div>
+              <div style={st.wLine}></div>
+              <div style={st.wItem}><span style={st.wVal}>{String(h).padStart(2, '0')}</span><span style={st.wLab}>H</span></div>
+              <div style={st.wLine}></div>
+              <div style={st.wItem}><span style={st.wVal}>{String(m).padStart(2, '0')}</span><span style={st.wLab}>M</span></div>
+              <div style={st.wLine}></div>
+              <div style={st.wItem}><span style={st.wVal}>{String(s).padStart(2, '0')}</span><span style={st.wLab}>S</span></div>
             </div>
           </div>
         </div>
-
       </div>
 
       <style jsx global>{`
-        body { margin: 0; background: #000; overflow: hidden; font-family: 'Inter', -apple-system, sans-serif; }
-        @keyframes slideUpFade {
-          from { opacity: 0; transform: translateY(30px) scale(0.98); filter: blur(10px); }
-          to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        body { 
+          margin: 0; background: #000; overflow: hidden; 
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          -webkit-font-smoothing: antialiased;
+        }
+        @keyframes islandExpand {
+          0% { width: 150px; opacity: 0; filter: blur(10px); }
+          100% { width: fit-content; opacity: 1; filter: blur(0); }
+        }
+        @keyframes appleReveal {
+          0% { opacity: 0; transform: scale(1.05) translateY(20px); filter: blur(20px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
         }
       `}</style>
     </main>
@@ -105,46 +116,63 @@ export default function AppleUnifiedClock() {
 }
 
 const st = {
-  viewport: { height: '100vh', width: '100vw', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#000', position: 'relative' },
-  backgroundEffect: {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    background: 'radial-gradient(circle at 50% 50%, #1c1c1e 0%, #000 80%)',
-    opacity: 0.6, zIndex: 0
+  viewport: { 
+    height: '100vh', width: '100vw', display: 'flex', flexDirection: 'column', 
+    alignItems: 'center', justifyContent: 'space-between', padding: '40px 0',
+    backgroundColor: '#000', position: 'relative' 
   },
-  centralStack: {
-    zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-    gap: '40px', // ĐÂY LÀ CHỐT CHẶN: Gom tất cả lại với khoảng cách vừa đủ
-    animation: 'slideUpFade 1.2s cubic-bezier(0.16, 1, 0.3, 1)',
-    width: '100%', maxWidth: '900px'
+  meshBG: {
+    position: 'absolute', inset: 0, zIndex: 0,
+    background: 'radial-gradient(at 50% 10%, #1a1a1c 0%, #000 60%)',
   },
 
-  // Island Style
-  islandContainer: { display: 'flex', justifyContent: 'center' },
-  island: {
-    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
-    padding: '10px 24px', borderRadius: '100px', backdropFilter: 'blur(20px)',
-    boxShadow: '0 4px 24px rgba(0,0,0,0.4)'
+  // Dynamic Island
+  islandWrapper: { zIndex: 10, paddingTop: '10px' },
+  dynamicIsland: {
+    background: '#000', border: '1px solid rgba(255,255,255,0.12)',
+    borderRadius: '100px', minWidth: '180px', height: '36px',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    padding: '0 20px', boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+    animation: 'islandExpand 0.8s cubic-bezier(0.16, 1, 0.3, 1)'
   },
-  islandSilver: { color: 'rgba(255,255,255,0.5)', fontSize: '14px', fontWeight: '400', letterSpacing: '-0.2px' },
+  islandSilver: { color: 'rgba(255,255,255,0.7)', fontSize: '13px', fontWeight: '500', letterSpacing: '-0.2px' },
   islandGold: { color: '#ffd60a', fontSize: '14px', fontWeight: '700' },
 
-  // Hero Section
-  heroArea: { textAlign: 'center' },
-  dateLabel: { color: '#0a84ff', fontSize: '13px', fontWeight: '800', letterSpacing: '5px', marginBottom: '10px' },
-  clockDisplay: { display: 'flex', alignItems: 'center', gap: '8px' },
-  timeDigit: { fontSize: 'clamp(5rem, 18vw, 13rem)', fontWeight: '800', color: '#fff', letterSpacing: '-8px', lineHeight: '0.9' },
-  timeSep: { fontSize: 'clamp(3rem, 10vw, 8rem)', fontWeight: '200', color: 'rgba(255,255,255,0.05)', position: 'relative', top: '-10px' },
-
-  // Widget Style
-  widgetContainer: { width: '100%', display: 'flex', justifyContent: 'center' },
-  widgetCard: {
-    background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
-    borderRadius: '40px', padding: '30px 60px', textAlign: 'center'
+  // Hero Section (Clock)
+  centralStack: { 
+    zIndex: 5, textAlign: 'center', 
+    animation: 'appleReveal 1.5s cubic-bezier(0.16, 1, 0.3, 1)' 
   },
-  widgetTitle: { fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.2)', letterSpacing: '4px', marginBottom: '20px' },
-  grid: { display: 'flex', alignItems: 'center', gap: '35px' },
-  gridItem: { display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '60px' },
-  gVal: { fontSize: '36px', fontWeight: '700', color: '#fff', letterSpacing: '-1.5px' },
-  gLab: { fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.15)', marginTop: '6px' },
-  gDivider: { height: '35px', width: '1px', background: 'rgba(255,255,255,0.05)' }
+  lockDate: { 
+    color: '#fff', fontSize: '20px', fontWeight: '600', 
+    letterSpacing: '-0.4px', marginBottom: '8px', opacity: 0.9 
+  },
+  lockClock: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' },
+  tDigit: { 
+    fontSize: 'clamp(6rem, 24vw, 16rem)', fontWeight: '700', 
+    color: '#fff', letterSpacing: '-10px', lineHeight: '1' 
+  },
+  tSep: { 
+    fontSize: 'clamp(4rem, 15vw, 10rem)', fontWeight: '200', 
+    color: 'rgba(255,255,255,0.15)', position: 'relative', top: '-10px' 
+  },
+
+  // Widgets
+  footer: { zIndex: 5, width: '100%', display: 'flex', justifyContent: 'center' },
+  widgetGroup: { animation: 'appleReveal 1.8s cubic-bezier(0.16, 1, 0.3, 1)' },
+  widget: {
+    background: 'rgba(28, 28, 30, 0.4)', backdropFilter: 'blur(40px) saturate(180%)',
+    border: '1px solid rgba(255,255,255,0.08)', borderRadius: '38px',
+    padding: '24px 48px', textAlign: 'center',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+  },
+  wHeader: { 
+    fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', 
+    letterSpacing: '4px', marginBottom: '20px' 
+  },
+  wGrid: { display: 'flex', gap: '30px', alignItems: 'center' },
+  wItem: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
+  wVal: { fontSize: '32px', fontWeight: '600', color: '#fff', letterSpacing: '-1.5px' },
+  wLab: { fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.2)', marginTop: '4px' },
+  wLine: { height: '30px', width: '1px', background: 'rgba(255,255,255,0.1)' }
 };
