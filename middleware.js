@@ -7,14 +7,41 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
 
-// THÊM 'event' VÀO ĐÂY ĐỂ CHẠY TÁC VỤ NGẦM
 export async function middleware(request, event) {
   const { pathname } = request.nextUrl;
 
-  // BỎ QUA API, ADMIN VÀ CÁC TRANG HỆ THỐNG ĐỂ TRÁNH LỖI VÀ TRACKING NHẦM
+  // ==========================================
+  // 1. CHỐT BẢO VỆ TRANG ADMIN (HTTP BASIC AUTH)
+  // ==========================================
+  if (pathname.startsWith('/admin')) {
+    const basicAuth = request.headers.get('authorization');
+    
+    if (basicAuth) {
+      const authValue = basicAuth.split(' ')[1];
+      const [user, pwd] = atob(authValue).split(':');
+      
+      // Tên đăng nhập và Mật khẩu
+      const validUser = 'binhtienti';
+      // Lấy pass từ Vercel, nếu chưa cài trên Vercel thì lấy tạm pass là 'chayso123'
+      const validPass = process.env.ADMIN_PASSWORD || 'chayso123'; 
+      
+      if (user === validUser && pwd === validPass) {
+        return NextResponse.next(); // Mật khẩu chuẩn -> Mở cổng cho sếp vào
+      }
+    }
+
+    // Nếu chưa nhập hoặc nhập sai -> Bật hộp thoại bắt nhập lại
+    return new NextResponse('Khu vực nội bộ! Vui lòng quay xe.', {
+      status: 401,
+      headers: { 'WWW-Authenticate': 'Basic realm="Secure Admin Area"' }
+    });
+  }
+
+  // ==========================================
+  // 2. BỎ QUA FILE HỆ THỐNG & API 
+  // ==========================================
   if (
     pathname.includes('/api/') || 
-    pathname.startsWith('/admin') || 
     pathname.startsWith('/_next') || 
     pathname === '/' || 
     pathname === '/favicon.ico'
@@ -22,57 +49,37 @@ export async function middleware(request, event) {
     return NextResponse.next();
   }
 
+  // ==========================================
+  // 3. XỬ LÝ CHUYỂN HƯỚNG & TRACKING CLICK
+  // ==========================================
   const slug = pathname.slice(1);
   let targetUrl = null;
 
   try {
-    // 1. Check bộ nhớ đệm Vercel KV trước
     targetUrl = await kv.get(slug);
 
-    // 2. Nếu chưa có trong cache thì mới mò vào Database
     if (!targetUrl) {
-      const { data } = await supabase
-        .from('links')
-        .select('original_url')
-        .eq('slug', slug)
-        .single();
-
+      const { data } = await supabase.from('links').select('original_url').eq('slug', slug).single();
       if (data?.original_url) {
         targetUrl = data.original_url;
-        // Lưu lại vào Cache 1 tiếng
         await kv.set(slug, targetUrl, { ex: 3600 });
       }
     }
 
-    // 3. NẾU TÌM THẤY LINK ĐÍCH -> TRACKING & CHUYỂN HƯỚNG
     if (targetUrl) {
-      // --- BẮT ĐẦU THEO DÕI ---
-      // Lấy nguồn khách đến (Từ FB, Tiktok, Web khác...)
-      const referrer = request.headers.get('referer') || 'Direct (Truy cập trực tiếp)';
-      // Lấy thông tin thiết bị (Android, iOS, Chrome, Safari...)
+      const referrer = request.headers.get('referer') || 'Direct';
       const userAgent = request.headers.get('user-agent') || 'Unknown';
-      // Lấy IP (để sau này chống click tặc nếu cần)
       const ip = request.headers.get('x-forwarded-for') || request.ip || 'Unknown';
 
-      // Chạy ngầm việc insert vào Supabase (Tuyệt đối không dùng await ở đây)
-      // Dùng event.waitUntil để Vercel không ngắt tác vụ ngầm này
       event.waitUntil(
-        supabase.from('click_logs').insert([{
-          slug: slug,
-          referrer: referrer,
-          user_agent: userAgent,
-          ip_address: ip
-        }])
+        supabase.from('click_logs').insert([{ slug, referrer, user_agent: userAgent, ip_address: ip }])
       );
-      // -------------------------
 
-      // CHUYỂN HƯỚNG NGAY LẬP TỨC
       return NextResponse.redirect(new URL(targetUrl));
     }
   } catch (e) {
     console.error("Lỗi Middleware:", e);
   }
 
-  // Nếu link chết hoặc không tồn tại thì cho qua (sẽ trả về 404)
   return NextResponse.next();
 }
