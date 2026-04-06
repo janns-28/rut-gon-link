@@ -1,177 +1,367 @@
 'use client';
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
-export default function Tet2026FinalFix() {
-  const canvasRef = useRef(null);
+const getNetworkInfo = (url) => {
+  const lowerUrl = url.toLowerCase();
+  if (lowerUrl.includes('dinos.click')) return { name: 'Dinos', bg: '#fee2e2', text: '#dc2626', border: '#fca5a5' };
+  if (lowerUrl.includes('hl-link')) return { name: 'Hyperlead', bg: '#e0e7ff', text: '#4f46e5', border: '#a5b4fc' };
+  if (lowerUrl.includes('accesstrade')) return { name: 'Accesstrade', bg: '#fef3c7', text: '#d97706', border: '#fcd34d' };
+  if (lowerUrl.includes('masoffer')) return { name: 'MasOffer', bg: '#dcfce7', text: '#16a34a', border: '#86efac' };
+  if (lowerUrl.includes('facebook.com')) return { name: 'Social', bg: '#dbeafe', text: '#2563eb', border: '#93c5fd' };
+  return { name: 'Direct', bg: '#f3f4f6', text: '#4b5563', border: '#d1d5db' };
+};
+
+export default function PremiumAdmin() {
+  const [links, setLinks] = useState([]);
+  const [clickLogs, setClickLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [toast, setToast] = useState('');
+  const [expandedGroups, setExpandedGroups] = useState({});
+  const [activeTab, setActiveTab] = useState('links'); // 'links' hoặc 'stats'
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    let particles = [];
-
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-
-    class Particle {
-      constructor(x, y, color) {
-        this.x = x; this.y = y; this.color = color;
-        this.velocity = { x: (Math.random() - 0.5) * 8, y: (Math.random() - 0.5) * 8 };
-        this.alpha = 1; this.friction = 0.95;
-      }
-      draw() {
-        ctx.save(); ctx.globalAlpha = this.alpha;
-        ctx.beginPath(); ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
-        ctx.fillStyle = this.color; ctx.fill(); ctx.restore();
-      }
-      update() {
-        this.velocity.x *= this.friction; this.velocity.y *= this.friction;
-        this.x += this.velocity.x; this.y += this.velocity.y;
-        this.alpha -= 0.012;
-      }
+    async function fetchData() {
+      // Tải song song cả Links và Click Logs
+      const [linksRes, logsRes] = await Promise.all([
+        supabase.from('links').select('*').order('created_at', { ascending: false }),
+        supabase.from('click_logs').select('*')
+      ]);
+      
+      if (linksRes.data) setLinks(linksRes.data);
+      if (logsRes.data) setClickLogs(logsRes.data);
+      setLoading(false);
     }
-
-    const animate = () => {
-      requestAnimationFrame(animate);
-      ctx.fillStyle = 'rgba(165, 29, 29, 0.2)'; 
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      particles.forEach((p, i) => {
-        if (p.alpha > 0) { p.update(); p.draw(); }
-        else { particles.splice(i, 1); }
-      });
-      if (Math.random() < 0.05) {
-        const x = Math.random() * canvas.width;
-        const y = Math.random() * canvas.height * 0.4;
-        const color = `hsl(${Math.random() * 40 + 40}, 100%, 65%)`;
-        for (let i = 0; i < 40; i++) particles.push(new Particle(x, y, color));
-      }
-    };
-
-    window.addEventListener('resize', resize);
-    resize(); animate();
-    return () => window.removeEventListener('resize', resize);
+    fetchData();
   }, []);
 
+  // --- XỬ LÝ DỮ LIỆU TAB LINKS ---
+  const filteredLinks = links.filter(l => 
+    l.slug.toLowerCase().includes(search.toLowerCase()) || 
+    l.original_url.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const groupedLinks = filteredLinks.reduce((acc, link) => {
+    const netInfo = getNetworkInfo(link.original_url);
+    const netName = netInfo.name;
+    if (!acc[netName]) acc[netName] = { info: netInfo, items: [] };
+    acc[netName].items.push(link);
+    return acc;
+  }, {});
+
+  const toggleGroup = (netName) => {
+    setExpandedGroups(prev => ({ ...prev, [netName]: !prev[netName] }));
+  };
+
+  const handleCopy = (slug) => {
+    const fullUrl = `${window.location.origin}/${slug}`;
+    navigator.clipboard.writeText(fullUrl);
+    setToast(`📋 Đã copy: /${slug}`);
+    setTimeout(() => setToast(''), 2500);
+  };
+
+  const handleDelete = async (slug) => {
+    const confirm = window.confirm(`Cảnh báo: Ông có chắc chắn muốn xóa vĩnh viễn link /${slug} không?`);
+    if (!confirm) return;
+    const previousLinks = [...links];
+    setLinks(links.filter(l => l.slug !== slug));
+    setToast(`🗑️ Đang dọn dẹp /${slug}...`);
+    try {
+      const res = await fetch('/api/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slug }) });
+      if (!res.ok) throw new Error('Lỗi từ Server');
+      setToast(`✅ Đã bay màu /${slug} thành công!`);
+      setTimeout(() => setToast(''), 3000);
+    } catch (error) {
+      setLinks(previousLinks);
+      setToast(`❌ Lỗi không xóa được! Vui lòng thử lại.`);
+      setTimeout(() => setToast(''), 3000);
+    }
+  };
+
+  // --- XỬ LÝ DỮ LIỆU TAB THỐNG KÊ ---
+  // 1. Đếm click theo Slug (Leaderboard)
+  const clickCounts = clickLogs.reduce((acc, log) => {
+    acc[log.slug] = (acc[log.slug] || 0) + 1;
+    return acc;
+  }, {});
+  const topLinks = Object.entries(clickCounts)
+    .map(([slug, count]) => {
+      const linkData = links.find(l => l.slug === slug);
+      return { 
+        slug, 
+        count, 
+        originalUrl: linkData?.original_url || 'N/A',
+        network: linkData ? getNetworkInfo(linkData.original_url).name : 'Unknown'
+      };
+    })
+    .sort((a, b) => b.count - a.count);
+
+  // 2. Phân tích Nguồn Traffic
+  const referrerCounts = clickLogs.reduce((acc, log) => {
+    let ref = log.referrer || 'Direct (Truy cập thẳng)';
+    const lowerRef = ref.toLowerCase();
+    if (lowerRef.includes('facebook.com')) ref = 'Facebook';
+    else if (lowerRef.includes('tiktok.com')) ref = 'TikTok';
+    else if (lowerRef.includes('threads.net')) ref = 'Threads';
+    else if (lowerRef.includes('zalo')) ref = 'Zalo';
+    else if (lowerRef.includes('instagram.com')) ref = 'Instagram';
+    else if (lowerRef.includes('youtube.com')) ref = 'YouTube';
+    else if (lowerRef.startsWith('http')) {
+      try { ref = new URL(ref).hostname; } catch(e){}
+    }
+    acc[ref] = (acc[ref] || 0) + 1;
+    return acc;
+  }, {});
+  const topReferrers = Object.entries(referrerCounts).sort((a, b) => b[1] - a[1]);
+
+  // 3. Phân tích Thiết bị (Hệ điều hành)
+  const deviceCounts = clickLogs.reduce((acc, log) => {
+    const ua = (log.user_agent || '').toLowerCase();
+    let device = 'Khác';
+    if (ua.includes('iphone') || ua.includes('ipad')) device = 'iOS (Apple)';
+    else if (ua.includes('android')) device = 'Android';
+    else if (ua.includes('windows')) device = 'Windows PC';
+    else if (ua.includes('mac os') || ua.includes('macintosh')) device = 'MacBook';
+    acc[device] = (acc[device] || 0) + 1;
+    return acc;
+  }, {});
+  const topDevices = Object.entries(deviceCounts).sort((a, b) => b[1] - a[1]);
+
   return (
-    <div className="tet-container">
-      <canvas ref={canvasRef} className="fireworks" />
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0f1115', color: '#e2e8f0', fontFamily: '"Inter", system-ui, sans-serif' }}>
       
-      {/* Icon tia sáng góc trên (Giống ảnh mẫu) */}
-      <div className="sunburst">❂</div>
+      {toast && (
+        <div style={{ position: 'fixed', bottom: '20px', right: '20px', background: toast.includes('❌') ? '#ef4444' : '#10b981', color: '#fff', padding: '12px 24px', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)', zIndex: 50, fontWeight: '500', animation: 'slideIn 0.3s ease-out' }}>
+          {toast}
+        </div>
+      )}
 
-      {/* Nhành mai uốn lượn (Vẽ bằng SVG để luôn sắc nét) */}
-      <div className="branch-container">
-        <svg viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0,400 Q150,250 300,320 T500,200" fill="none" stroke="#5d4037" strokeWidth="8" strokeLinecap="round" />
-          <circle cx="150" cy="300" r="15" fill="#f9d479" />
-          <circle cx="280" cy="320" r="18" fill="#f9d479" />
-          <circle cx="450" cy="230" r="20" fill="#f9d479" />
-          <circle cx="80" cy="360" r="12" fill="#f9d479" />
-          <circle cx="220" cy="310" r="10" fill="#f9d479" />
-        </svg>
-      </div>
-
-      <div className="main-content">
-        <h3 className="script-text">Chúc mừng</h3>
+      {/* SIDEBAR */}
+      <aside style={{ width: '260px', borderRight: '1px solid #1f2937', backgroundColor: '#111318', padding: '24px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '40px' }}>
+          <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff' }}>B</div>
+          <span style={{ fontSize: '1.2rem', fontWeight: '700', letterSpacing: '0.5px', color: '#f8fafc' }}>BINHTIENTI</span>
+        </div>
         
-        <div className="year-header">
-          <h1 className="title-text">XUÂN BÍNH NGỌ</h1>
-          <div className="box-2026">
-            <span className="top">20</span>
-            <div className="line"></div>
-            <span className="bottom">26</span>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <button 
+            onClick={() => setActiveTab('links')}
+            style={{ width: '100%', border: 'none', cursor: 'pointer', padding: '12px 16px', borderRadius: '8px', background: activeTab === 'links' ? '#1f2937' : 'transparent', color: activeTab === 'links' ? '#f8fafc' : '#94a3b8', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '12px', transition: 'all 0.2s' }}
+          >
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+            Quản lý Links
+          </button>
+          <button 
+            onClick={() => setActiveTab('stats')}
+            style={{ width: '100%', border: 'none', cursor: 'pointer', padding: '12px 16px', borderRadius: '8px', background: activeTab === 'stats' ? '#1f2937' : 'transparent', color: activeTab === 'stats' ? '#f8fafc' : '#94a3b8', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '12px', transition: 'all 0.2s' }}
+          >
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            Thống kê Traffic
+          </button>
+        </nav>
+      </aside>
+
+      {/* MAIN CONTENT */}
+      <main style={{ flex: 1, padding: '40px 50px', overflowY: 'auto' }}>
+        
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+            <div style={{ color: '#64748b', fontSize: '1.2rem' }}>Đang đồng bộ dữ liệu hệ thống... ⏳</div>
           </div>
-        </div>
+        ) : activeTab === 'links' ? (
+          /* =========================================
+                      GIAO DIỆN TAB QUẢN LÝ LINKS 
+             ========================================= */
+          <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+              <div>
+                <h1 style={{ fontSize: '1.8rem', fontWeight: '700', color: '#f8fafc', margin: '0 0 8px 0' }}>Chiến dịch Affiliate</h1>
+                <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.95rem' }}>Theo dõi và quản lý các liên kết chuyển hướng của bạn.</p>
+              </div>
+              <div style={{ display: 'flex', gap: '20px' }}>
+                <div style={{ background: '#1f2937', padding: '12px 24px', borderRadius: '12px', border: '1px solid #374151', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <span style={{ fontSize: '1.5rem', fontWeight: '800', color: '#fff' }}>{links.length}</span>
+                  <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '4px' }}>Tổng Link</span>
+                </div>
+              </div>
+            </header>
 
-        <div className="divider">
-          <div className="hr"></div>
-          <span className="hny-text">HAPPY NEW YEAR</span>
-          <div className="hr"></div>
-        </div>
+            <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
+                <svg style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <input type="text" placeholder="Tìm kiếm mã hoặc link gốc..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: '100%', padding: '12px 16px 12px 44px', borderRadius: '10px', border: '1px solid #374151', background: '#111318', color: '#f8fafc', fontSize: '0.95rem', outline: 'none', transition: 'all 0.2s', boxSizing: 'border-box' }} />
+              </div>
+            </div>
 
-        <p className="wish-text">
-          Chúc Quý khách cùng gia đình một mùa xuân<br/>
-          an khang, thịnh vượng, vạn sự như ý và thành công rực rỡ.
-        </p>
-      </div>
+            <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', whiteSpace: 'nowrap' }}>
+                <thead>
+                  <tr style={{ background: '#181b23', borderBottom: '1px solid #1f2937' }}>
+                    <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Mã Rút Gọn</th>
+                    <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Link Gốc</th>
+                    <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ngày Lên Camp</th>
+                    <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right' }}>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.keys(groupedLinks).length === 0 ? (
+                    <tr><td colSpan="4" style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Không tìm thấy chiến dịch nào.</td></tr>
+                  ) : (
+                    Object.entries(groupedLinks).map(([netName, group]) => {
+                      const isExpanded = search !== '' || expandedGroups[netName];
+                      return (
+                        <React.Fragment key={netName}>
+                          <tr onClick={() => toggleGroup(netName)} style={{ background: '#1e293b', borderBottom: '1px solid #334155', cursor: 'pointer', transition: 'background 0.2s', userSelect: 'none' }} onMouseEnter={(e) => e.currentTarget.style.background = '#334155'} onMouseLeave={(e) => e.currentTarget.style.background = '#1e293b'}>
+                            <td colSpan="4" style={{ padding: '12px 24px', fontWeight: '700', color: group.info.text }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                  <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: group.info.text }}></span>
+                                  Nền tảng: {netName.toUpperCase()} <span style={{ color: '#94a3b8', fontSize: '0.85rem', fontWeight: '500', marginLeft: '6px' }}>({group.items.length} link)</span>
+                                </span>
+                                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ color: '#94a3b8', transition: 'transform 0.3s ease', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+                              </div>
+                            </td>
+                          </tr>
+                          
+                          {isExpanded && group.items.map((l) => (
+                            <tr key={l.id} style={{ borderBottom: '1px solid #1f2937', transition: 'background 0.15s', animation: 'fadeIn 0.2s ease-out' }} onMouseEnter={(e) => e.currentTarget.style.background = '#181b23'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                              <td style={{ padding: '16px 24px' }}><div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: '#64748b' }}>/</span><strong style={{ color: '#f8fafc', letterSpacing: '0.5px' }}>{l.slug}</strong></div></td>
+                              <td style={{ padding: '16px 24px', maxWidth: '350px' }}><div style={{ overflow: 'hidden', textOverflow: 'ellipsis', color: '#cbd5e1', fontSize: '0.9rem' }} title={l.original_url}>{l.original_url}</div></td>
+                              <td style={{ padding: '16px 24px', color: '#94a3b8', fontSize: '0.9rem' }}>{new Date(l.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
+                              <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                  <button onClick={() => handleCopy(l.slug)} title="Copy" style={{ background: '#374151', color: '#d1d5db', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>
+                                  <a href={l.original_url} target="_blank" rel="noopener noreferrer" title="Mở Link" style={{ background: '#374151', color: '#d1d5db', border: 'none', padding: '8px', borderRadius: '8px', display: 'flex' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
+                                  <button onClick={() => handleDelete(l.slug)} title="Xóa" style={{ background: '#374151', color: '#fca5a5', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </React.Fragment>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          /* =========================================
+                      GIAO DIỆN TAB THỐNG KÊ (MỚI)
+             ========================================= */
+          <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+            <header style={{ marginBottom: '40px' }}>
+              <h1 style={{ fontSize: '1.8rem', fontWeight: '700', color: '#f8fafc', margin: '0 0 8px 0' }}>Báo Cáo Hiệu Suất</h1>
+              <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.95rem' }}>Phân tích lượng truy cập thực tế từ các phễu mồi.</p>
+            </header>
 
+            {/* 3 THẺ TỔNG QUAN */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+              <div style={{ background: '#111318', padding: '24px', borderRadius: '16px', border: '1px solid #1f2937', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                <div style={{ color: '#94a3b8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: '600' }}>Tổng số Click (All-time)</div>
+                <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#10b981' }}>{clickLogs.length}</div>
+              </div>
+              <div style={{ background: '#111318', padding: '24px', borderRadius: '16px', border: '1px solid #1f2937', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                <div style={{ color: '#94a3b8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: '600' }}>Link Top 1 Đang Cắn</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#60a5fa', marginBottom: '4px' }}>/{topLinks[0]?.slug || 'Chưa có'}</div>
+                <div style={{ color: '#cbd5e1', fontSize: '0.9rem' }}>{topLinks[0]?.count || 0} lượt bấm</div>
+              </div>
+              <div style={{ background: '#111318', padding: '24px', borderRadius: '16px', border: '1px solid #1f2937', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                <div style={{ color: '#94a3b8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: '600' }}>Tỷ lệ Đóng Góp</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: '600', color: '#f8fafc', lineHeight: '1.4' }}>
+                  {topLinks.length > 0 ? (
+                    <>Top 1 chiếm <span style={{ color: '#f43f5e' }}>{Math.round((topLinks[0].count / clickLogs.length) * 100)}%</span> traffic.</>
+                  ) : 'Đang đợi data...'}
+                </div>
+              </div>
+            </div>
+
+            {/* PHẦN BIỂU ĐỒ BARS */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
+              
+              {/* Box Nguồn Traffic */}
+              <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', padding: '24px' }}>
+                <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#f8fafc' }}>🌐 Phân bổ Nguồn Traffic</h3>
+                {topReferrers.length === 0 ? <p style={{ color: '#64748b' }}>Chưa có dữ liệu</p> : 
+                  topReferrers.map(([name, count], index) => {
+                    const percent = Math.round((count / clickLogs.length) * 100);
+                    return (
+                      <div key={name} style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#cbd5e1', fontWeight: '500' }}>{name}</span>
+                          <span style={{ color: '#94a3b8' }}>{count} click ({percent}%)</span>
+                        </div>
+                        <div style={{ width: '100%', height: '8px', background: '#1e293b', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div style={{ width: `${percent}%`, height: '100%', background: index === 0 ? '#3b82f6' : '#6366f1', borderRadius: '4px', transition: 'width 1s ease-out' }}></div>
+                        </div>
+                      </div>
+                    )
+                  })
+                }
+              </div>
+
+              {/* Box Thiết Bị */}
+              <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', padding: '24px' }}>
+                <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#f8fafc' }}>📱 Tỷ lệ Hệ điều hành (Tối ưu App)</h3>
+                {topDevices.length === 0 ? <p style={{ color: '#64748b' }}>Chưa có dữ liệu</p> : 
+                  topDevices.map(([name, count], index) => {
+                    const percent = Math.round((count / clickLogs.length) * 100);
+                    return (
+                      <div key={name} style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#cbd5e1', fontWeight: '500' }}>{name}</span>
+                          <span style={{ color: '#94a3b8' }}>{count} click ({percent}%)</span>
+                        </div>
+                        <div style={{ width: '100%', height: '8px', background: '#1e293b', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div style={{ width: `${percent}%`, height: '100%', background: index === 0 ? '#10b981' : '#34d399', borderRadius: '4px', transition: 'width 1s ease-out' }}></div>
+                        </div>
+                      </div>
+                    )
+                  })
+                }
+              </div>
+            </div>
+
+            {/* BẢNG XẾP HẠNG CHI TIẾT */}
+            <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', padding: '24px' }}>
+              <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#f8fafc' }}>🔥 Bảng Xếp Hạng Chiến Dịch</h3>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #1f2937', color: '#94a3b8', fontSize: '0.85rem' }}>
+                    <th style={{ paddingBottom: '12px', fontWeight: '600' }}>TOP</th>
+                    <th style={{ paddingBottom: '12px', fontWeight: '600' }}>Mã Rút Gọn</th>
+                    <th style={{ paddingBottom: '12px', fontWeight: '600' }}>Nền Tảng</th>
+                    <th style={{ paddingBottom: '12px', fontWeight: '600', textAlign: 'right' }}>Tổng Click</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topLinks.map((link, idx) => (
+                    <tr key={link.slug} style={{ borderBottom: '1px solid #1e293b' }}>
+                      <td style={{ padding: '16px 0', color: idx === 0 ? '#fbbf24' : idx === 1 ? '#94a3b8' : idx === 2 ? '#b45309' : '#64748b', fontWeight: 'bold' }}>
+                        #{idx + 1}
+                      </td>
+                      <td style={{ padding: '16px 0', color: '#f8fafc', fontWeight: '500' }}>/{link.slug}</td>
+                      <td style={{ padding: '16px 0', color: '#94a3b8', fontSize: '0.9rem' }}>{link.network}</td>
+                      <td style={{ padding: '16px 0', color: '#10b981', fontWeight: '700', textAlign: 'right' }}>{link.count}</td>
+                    </tr>
+                  ))}
+                  {topLinks.length === 0 && <tr><td colSpan="4" style={{ padding: '20px 0', textAlign: 'center', color: '#64748b' }}>Chưa có click nào được ghi nhận.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        )}
+      </main>
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:wght@700;900&display=swap');
-        
-        body { margin: 0; background-color: #a51d1d; overflow: hidden; }
-        
-        .tet-container {
-          height: 100vh; width: 100vw; position: relative;
-          display: flex; justify-content: center; align-items: center;
-          background-color: #a51d1d;
-          background-image: radial-gradient(#800 1px, transparent 1px);
-          background-size: 40px 40px;
-        }
-
-        .fireworks { position: absolute; top: 0; left: 0; }
-
-        .sunburst {
-          position: absolute; top: 10%; left: 8%;
-          color: #f9d479; font-size: 5rem; opacity: 0.4;
-        }
-
-        .branch-container {
-          position: absolute; bottom: -40px; left: -40px;
-          width: 45vw; z-index: 5; pointer-events: none;
-        }
-
-        .main-content {
-          position: relative; z-index: 10;
-          text-align: center; color: #f9d479;
-          animation: fadeIn 2s ease-out;
-        }
-
-        .script-text {
-          font-family: 'Dancing Script', cursive;
-          font-size: clamp(3rem, 8vw, 6rem);
-          margin: 0; font-weight: 400; font-style: italic;
-          margin-bottom: -15px; margin-left: -200px;
-        }
-
-        .year-header {
-          display: flex; align-items: center; justify-content: center; gap: 20px;
-        }
-
-        .title-text {
-          font-family: 'Playfair Display', serif;
-          font-size: clamp(3rem, 11vw, 8.5rem);
-          margin: 0; font-weight: 900; letter-spacing: 2px;
-        }
-
-        .box-2026 {
-          border: 2px solid #f9d479; padding: 5px 12px; border-radius: 8px;
-          display: flex; flex-direction: column; font-size: 1.6rem;
-          font-weight: bold; line-height: 1.1; background: rgba(0,0,0,0.1);
-        }
-
-        .box-2026 .line { height: 2px; background: #f9d479; margin: 3px 0; }
-
-        .divider {
-          display: flex; align-items: center; justify-content: center; margin: 35px 0;
-        }
-
-        .divider .hr { height: 1.5px; width: 18vw; background: #f9d479; }
-        .divider .hny-text {
-          margin: 0 20px; font-size: 1.2rem; letter-spacing: 6px;
-          color: #fff; font-weight: bold;
-        }
-
-        .wish-text {
-          font-size: clamp(1rem, 3.2vw, 1.7rem); color: #fff;
-          font-style: italic; max-width: 900px; margin: 0 auto;
-          line-height: 1.7; opacity: 0.95;
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
+        body { margin: 0; padding: 0; background-color: #0f1115; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f1115; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+        @keyframes slideIn { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
     </div>
   );
