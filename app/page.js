@@ -1,127 +1,140 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 
-// Thành phần con chỉ hiện số, để xử lý việc "không nhảy"
-const TimeDisplay = ({ value, label }) => {
-  // Chỉ render số khi 'value' không phải là null (tức là đã chạy useEffect trên client)
-  const isReady = value !== null;
-  
-  return (
-    <div className="time-box">
-      <span className="number">
-        {isReady ? String(value).padStart(label === 'NGÀY' ? 1 : 2, '0') : '--'}
-      </span>
-      <span className="label">{label}</span>
-      <style jsx>{`
-        .time-box { display: flex; flex-direction: column; align-items: center; min-width: 80px; }
-        .number {
-          font-size: clamp(2rem, 6vw, 4rem);
-          font-weight: 800;
-          font-variant-numeric: tabular-nums;
-          color: #f8fafc;
-          /* Hiệu ứng fadeIn nhẹ khi số hiện ra */
-          animation: ${isReady ? 'none' : 'fadeIn 0.5s ease-out'};
-        }
-        .label { font-size: 0.75rem; color: #64748b; font-weight: 700; letter-spacing: 2px; margin-top: 8px; }
-        @media (max-width: 600px) { .time-box { min-width: 60px; } }
-      `}</style>
-    </div>
-  );
+// Danh sách các ngày lễ cố định (Dương lịch)
+const HOLIDAYS = {
+  '01-01': 'Tết Dương Lịch',
+  '14-02': 'Lễ Tình Nhân (Valentine)',
+  '08-03': 'Quốc Tế Phụ Nữ',
+  '30-04': 'Giải Phóng Miền Nam',
+  '01-05': 'Quốc Tế Lao Động',
+  '19-05': 'Ngày Sinh Chủ Tịch Hồ Chí Minh',
+  '01-06': 'Quốc Tế Thiếu Nhi',
+  '02-09': 'Quốc Khánh Việt Nam',
+  '20-10': 'Ngày Phụ Nữ Việt Nam',
+  '20-11': 'Ngày Nhà Giáo Việt Nam',
+  '22-12': 'Ngày Thành Lập Quân Đội NDVN',
+  '24-12': 'Lễ Giáng Sinh (Christmas)',
+  '25-12': 'Lễ Giáng Sinh (Christmas)',
+  '31-12': 'Đêm Giao Thừa'
 };
 
-export default function CountdownPage() {
-  // BẮT ĐẦU VỚI NULL (Thay vì 0) -> Để báo cho Server biết là đừng render gì hết
-  const [timeLeft, setTimeLeft] = useState({
-    days: null, hours: null, minutes: null, seconds: null
-  });
-
-  // Mốc thời gian mục tiêu (Tết Dương Lịch 2027)
-  const targetDate = new Date('January 1, 2027 00:00:00').getTime();
+export default function ClockAndCountdown() {
+  const [isReady, setIsReady] = useState(false);
+  const [now, setNow] = useState(new Date());
+  const [holiday, setHoliday] = useState('');
 
   useEffect(() => {
-    // Hàm tính toán thời gian
-    const calculateTime = () => {
-      const now = new Date().getTime();
-      const distance = targetDate - now;
-
-      if (distance < 0) return null;
-
-      return {
-        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((distance % (1000 * 60)) / 1000)
-      };
-    };
-
-    // Chạy lần đầu ngay lập tức trên máy khách (Client)
-    const initialTime = calculateTime();
-    if (initialTime) setTimeLeft(initialTime);
-
-    // Chạy interval mỗi giây
+    setIsReady(true);
     const timer = setInterval(() => {
-      const currentTime = calculateTime();
-      if (currentTime) {
-        setTimeLeft(currentTime);
-      } else {
-        clearInterval(timer);
-      }
+      const currentTime = new Date();
+      setNow(currentTime);
+      
+      // Kiểm tra ngày lễ
+      const dayMonth = `${String(currentTime.getDate()).padStart(2, '0')}-${String(currentTime.getMonth() + 1).padStart(2, '0')}`;
+      setHoliday(HOLIDAYS[dayMonth] || '');
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [targetDate]);
+  }, []);
+
+  // Tính toán đếm ngược đến năm mới
+  const currentYear = now.getFullYear();
+  const nextYear = currentYear + 1;
+  const targetDate = new Date(`January 1, ${nextYear} 00:00:00`).getTime();
+  const distance = targetDate - now.getTime();
+
+  const timeLeft = {
+    days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+    hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+    minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+    seconds: Math.floor((distance % (1000 * 60)) / 1000)
+  };
+
+  // Nếu chưa sẵn sàng (đang render ở server) thì hiện màn hình trống đen để không bị nhảy
+  if (!isReady) return <div style={{ backgroundColor: '#0f1115', minHeight: '100vh' }}></div>;
 
   return (
-    <div className="countdown-wrapper">
-      <div className="content">
-        <h2 className="subtitle">HỆ THỐNG ĐANG KHỞI TẠO</h2>
-        <h1 className="title">SẮP RA MẮT</h1>
-        
-        <div className="timer-container">
-          <TimeDisplay value={timeLeft.days} label="NGÀY" />
-          <div className="separator">:</div>
-          <TimeDisplay value={timeLeft.hours} label="GIỜ" />
-          <div className="separator">:</div>
-          <TimeDisplay value={timeLeft.minutes} label="PHÚT" />
-          <div className="separator">:</div>
-          <TimeDisplay value={timeLeft.seconds} label="GIÂY" />
+    <div className="wrapper">
+      <div className="container">
+        {/* Phần 1: Ngày tháng năm & Giờ hiện tại */}
+        <div className="current-info">
+          <p className="date-str">
+            {now.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+          </p>
+          <h1 className="clock">
+            {now.toLocaleTimeString('vi-VN', { hour12: false })}
+          </h1>
         </div>
 
-        <p className="description">
-          Dự án chiến dịch Affiliate mới đang được chuẩn bị.<br/>
-          Vui lòng quay lại sau khi đồng hồ về số 0.
-        </p>
+        {/* Phần 2: Thông báo ngày lễ (Nếu có) */}
+        <div className={`holiday-box ${holiday ? 'active' : ''}`}>
+          {holiday ? `✨ Hôm nay là: ${holiday} ✨` : 'Chúc bạn một ngày tốt lành'}
+        </div>
+
+        <div className="divider"></div>
+
+        {/* Phần 3: Đếm ngược cuối năm */}
+        <div className="countdown-section">
+          <p className="countdown-title">ĐẾM NGƯỢC ĐẾN NĂM {nextYear}</p>
+          <div className="timer-grid">
+            <div className="unit">
+              <span className="val">{timeLeft.days}</span>
+              <span className="lab">NGÀY</span>
+            </div>
+            <div className="sep">:</div>
+            <div className="unit">
+              <span className="val">{String(timeLeft.hours).padStart(2, '0')}</span>
+              <span className="lab">GIỜ</span>
+            </div>
+            <div className="sep">:</div>
+            <div className="unit">
+              <span className="val">{String(timeLeft.minutes).padStart(2, '0')}</span>
+              <span className="lab">PHÚT</span>
+            </div>
+            <div className="sep">:</div>
+            <div className="unit">
+              <span className="val">{String(timeLeft.seconds).padStart(2, '0')}</span>
+              <span className="lab">GIÂY</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <style jsx global>{`
-        body {
-          margin: 0; padding: 0;
-          background-color: #0f1115; /* Nền đen ngay lập tức */
-          color: #fff;
-          font-family: 'Inter', system-ui, sans-serif;
-          overflow: hidden;
-        }
-        .countdown-wrapper {
+      <style jsx>{`
+        .wrapper {
           height: 100vh; width: 100vw;
           display: flex; justify-content: center; align-items: center;
-          background: radial-gradient(circle at center, #1e1b4b 0%, #0f1115 100%);
+          background: #0f1115; /* Khớp với globals.css */
+          color: #fff;
+          font-family: 'Inter', sans-serif;
         }
-        .content { text-align: center; }
-        .subtitle { font-size: 0.9rem; letter-spacing: 4px; color: #818cf8; margin-bottom: 10px; font-weight: 600; }
-        .title {
-          font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 900; margin: 0 0 40px 0;
-          background: linear-gradient(to bottom, #fff 30%, #94a3b8 100%);
-          -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .timer-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 40px; }
-        .separator { font-size: 2.5rem; font-weight: 300; color: #334155; margin-bottom: 30px; }
-        .description { font-size: 1.1rem; color: #94a3b8; line-height: 1.6; font-style: italic; }
+        .container { text-align: center; animation: fadeIn 1s ease-in-out; }
         
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .date-str { color: #818cf8; letter-spacing: 2px; font-size: 1.1rem; text-transform: uppercase; margin-bottom: 10px; }
+        .clock { font-size: clamp(4rem, 10vw, 8rem); margin: 0; font-weight: 900; letter-spacing: -2px; color: #f8fafc; }
+        
+        .holiday-box { 
+          margin: 30px 0; font-size: 1.4rem; font-weight: 500; color: #94a3b8; 
+          transition: all 0.5s;
+        }
+        .holiday-box.active { color: #fbbf24; text-shadow: 0 0 20px rgba(251, 191, 36, 0.4); font-weight: 700; }
 
+        .divider { height: 1px; width: 100px; background: #334155; margin: 40px auto; }
+
+        .countdown-title { font-size: 0.8rem; letter-spacing: 5px; color: #64748b; margin-bottom: 20px; }
+        .timer-grid { display: flex; align-items: center; justify-content: center; gap: 20px; }
+        .unit { display: flex; flex-direction: column; min-width: 70px; }
+        .val { font-size: 2.5rem; font-weight: 700; color: #cbd5e1; }
+        .lab { font-size: 0.7rem; color: #475569; margin-top: 5px; font-weight: 800; }
+        .sep { font-size: 2rem; color: #1e293b; padding-bottom: 25px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
         @media (max-width: 600px) {
-          .timer-container { gap: 8px; }
-          .separator { font-size: 1.5rem; }
+          .timer-grid { gap: 10px; }
+          .unit { min-width: 50px; }
+          .val { font-size: 1.5rem; }
         }
       `}</style>
     </div>
