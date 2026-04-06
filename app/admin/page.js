@@ -330,4 +330,90 @@ export default function PremiumAdmin() {
                 <div style={{ color: '#94a3b8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: '600' }}>Tỷ lệ Đóng Góp</div>
                 <div style={{ fontSize: '1.2rem', fontWeight: '600', color: '#f8fafc', lineHeight: '1.4' }}>
                   {topLinks.length > 0 ? (
-                    <>Top 1 chiếm <span style
+                    <>Top 1 chiếm <span style={{ color: '#f43f5e' }}>{Math.round((topLinks[0].count / clickLogs.length) * 100)}%</span> traffic.</>
+                  ) : 'Đang đợi data...'}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
+              <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', padding: '24px' }}>
+                <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#f8fafc' }}>🌐 Phân bổ Nguồn Traffic</h3>
+                {topReferrers.length === 0 ? <p style={{ color: '#64748b' }}>Chưa có dữ liệu</p> : 
+                  topReferrers.map(([name, count], index) => {
+                    const percent = Math.round((count / clickLogs.length) * 100);
+                    return (
+                      <div key={name} style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#cbd5e1', fontWeight: '500' }}>{name}</span>
+                          <span style={{ color: '#94a3b8' }}>{count} click ({percent}%)</span>
+                        </div>
+                        <div style={{ width: '100%', height: '8px', background: '#1e293b', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div style={{ width: `${percent}%`, height: '100%', background: index === 0 ? '#3b82f6' : '#6366f1', borderRadius: '4px', transition: 'width 1s ease-out' }}></div>
+                        </div>
+                      </div>
+                    )
+                  })
+                }
+              </div>
+
+              <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', padding: '24px' }}>
+                <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#f8fafc' }}>📱 Tỷ lệ Hệ điều hành</h3>
+                {topDevices.length === 0 ? <p style={{ color: '#64748b' }}>Chưa có dữ liệu</p> : 
+                  topDevices.map(([name, count], index) => {
+                    const percent = Math.round((count / clickLogs.length) * 100);
+                    return (
+                      <div key={name} style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#cbd5e1', fontWeight: '500' }}>{name}</span>
+                          <span style={{ color: '#94a3b8' }}>{count} click ({percent}%)</span>
+                        </div>
+                        <div style={{ width: '100%', height: '8px', background: '#1e293b', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div style={{ width: `${percent}%`, height: '100%', background: index === 0 ? '#10b981' : '#34d399', borderRadius: '4px', transition: 'width 1s ease-out' }}></div>
+                        </div>
+                      </div>
+                    )
+                  })
+                }
+              </div>
+            </div>
+
+            <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', padding: '24px' }}>
+              <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#f8fafc' }}>🔥 Bảng Xếp Hạng Chiến Dịch</h3>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #1f2937', color: '#94a3b8', fontSize: '0.85rem' }}>
+                    <th style={{ paddingBottom: '12px', fontWeight: '600' }}>TOP</th>
+                    <th style={{ paddingBottom: '12px', fontWeight: '600' }}>Mã Rút Gọn</th>
+                    <th style={{ paddingBottom: '12px', fontWeight: '600' }}>Nền Tảng</th>
+                    <th style={{ paddingBottom: '12px', fontWeight: '600', textAlign: 'right' }}>Tổng Click</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topLinks.map((link, idx) => (
+                    <tr key={link.slug} style={{ borderBottom: '1px solid #1e293b' }}>
+                      <td style={{ padding: '16px 0', color: idx === 0 ? '#fbbf24' : idx === 1 ? '#94a3b8' : idx === 2 ? '#b45309' : '#64748b', fontWeight: 'bold' }}>
+                        #{idx + 1}
+                      </td>
+                      <td style={{ padding: '16px 0', color: '#f8fafc', fontWeight: '500' }}>/{link.slug}</td>
+                      <td style={{ padding: '16px 0', color: '#94a3b8', fontSize: '0.9rem' }}>{link.network}</td>
+                      <td style={{ padding: '16px 0', color: '#10b981', fontWeight: '700', textAlign: 'right' }}>{link.count}</td>
+                    </tr>
+                  ))}
+                  {topLinks.length === 0 && <tr><td colSpan="4" style={{ padding: '20px 0', textAlign: 'center', color: '#64748b' }}>Chưa có click nào được ghi nhận.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        )}
+      </main>
+
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+      `}} />
+    </div>
+  );
+}
