@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
-// Helper nhận diện Network Affiliate
 const getNetworkInfo = (url) => {
   const lowerUrl = url.toLowerCase();
   if (lowerUrl.includes('dinos.click')) return { name: 'Dinos', bg: '#fee2e2', text: '#dc2626', border: '#fca5a5' };
@@ -36,21 +35,47 @@ export default function PremiumAdmin() {
   const handleCopy = (slug) => {
     const fullUrl = `${window.location.origin}/${slug}`;
     navigator.clipboard.writeText(fullUrl);
-    setToast(`Đã copy: /${slug}`);
+    setToast(`📋 Đã copy: /${slug}`);
     setTimeout(() => setToast(''), 2500);
+  };
+
+  // Hàm xử lý XÓA LINK
+  const handleDelete = async (slug) => {
+    const confirm = window.confirm(`Cảnh báo: Ông có chắc chắn muốn xóa vĩnh viễn link /${slug} không?`);
+    if (!confirm) return;
+
+    // Ẩn tạm link trên giao diện cho mượt
+    const previousLinks = [...links];
+    setLinks(links.filter(l => l.slug !== slug));
+    setToast(`🗑️ Đang dọn dẹp /${slug}...`);
+
+    try {
+      const res = await fetch('/api/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug })
+      });
+
+      if (!res.ok) throw new Error('Lỗi từ Server');
+      setToast(`✅ Đã bay màu /${slug} thành công!`);
+      setTimeout(() => setToast(''), 3000);
+    } catch (error) {
+      // Nếu lỗi thì trả lại link trên bảng
+      setLinks(previousLinks);
+      setToast(`❌ Lỗi không xóa được! Vui lòng thử lại.`);
+      setTimeout(() => setToast(''), 3000);
+    }
   };
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0f1115', color: '#e2e8f0', fontFamily: '"Inter", system-ui, sans-serif' }}>
       
-      {/* Toast Notification */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: '20px', right: '20px', background: '#10b981', color: '#fff', padding: '12px 24px', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)', zIndex: 50, fontWeight: '500', animation: 'slideIn 0.3s ease-out' }}>
-          ✓ {toast}
+        <div style={{ position: 'fixed', bottom: '20px', right: '20px', background: toast.includes('❌') ? '#ef4444' : '#10b981', color: '#fff', padding: '12px 24px', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)', zIndex: 50, fontWeight: '500', animation: 'slideIn 0.3s ease-out' }}>
+          {toast}
         </div>
       )}
 
-      {/* Sidebar */}
       <aside style={{ width: '260px', borderRight: '1px solid #1f2937', backgroundColor: '#111318', padding: '24px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '40px' }}>
           <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff' }}>B</div>
@@ -62,7 +87,6 @@ export default function PremiumAdmin() {
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
             Quản lý Links
           </a>
-          {/* Menu ảo cho đẹp */}
           <a href="#" style={{ padding: '12px 16px', borderRadius: '8px', color: '#94a3b8', textDecoration: 'none', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'not-allowed', opacity: 0.7 }}>
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
             Thống kê (Sắp có)
@@ -70,15 +94,13 @@ export default function PremiumAdmin() {
         </nav>
 
         <div style={{ marginTop: 'auto', padding: '16px', background: '#1e1b4b', borderRadius: '12px', border: '1px solid #312e81' }}>
-          <p style={{ margin: '0 0 8px 0', fontSize: '0.85rem', color: '#a5b4fc', fontWeight: '600' }}>🚀 Hướng dẫn xóa link</p>
-          <p style={{ margin: 0, fontSize: '0.8rem', color: '#818cf8', lineHeight: '1.5' }}>Mở Telegram Bot và chat:<br/><strong style={{ color: '#fff' }}>/xoa [mã_rút_gọn]</strong></p>
+          <p style={{ margin: '0 0 8px 0', fontSize: '0.85rem', color: '#a5b4fc', fontWeight: '600' }}>🚀 Hướng dẫn xóa nhanh</p>
+          <p style={{ margin: 0, fontSize: '0.8rem', color: '#818cf8', lineHeight: '1.5' }}>Bot Telegram:<br/><strong style={{ color: '#fff' }}>/xoa [mã_rút_gọn]</strong></p>
         </div>
       </aside>
 
-      {/* Main Content */}
       <main style={{ flex: 1, padding: '40px 50px', overflowY: 'auto' }}>
         
-        {/* Header */}
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
           <div>
             <h1 style={{ fontSize: '1.8rem', fontWeight: '700', color: '#f8fafc', margin: '0 0 8px 0' }}>Chiến dịch Affiliate</h1>
@@ -96,7 +118,6 @@ export default function PremiumAdmin() {
           </div>
         </header>
 
-        {/* Toolbar */}
         <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
           <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
             <svg style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -112,7 +133,6 @@ export default function PremiumAdmin() {
           </div>
         </div>
 
-        {/* Table Container */}
         <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', whiteSpace: 'nowrap' }}>
             <thead>
@@ -173,6 +193,15 @@ export default function PremiumAdmin() {
                           >
                             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                           </a>
+                          <button 
+                            onClick={() => handleDelete(l.slug)}
+                            title="Xóa Link Này"
+                            style={{ background: '#374151', color: '#fca5a5', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.color = '#fff'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = '#374151'; e.currentTarget.style.color = '#fca5a5'; }}
+                          >
+                            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -185,30 +214,11 @@ export default function PremiumAdmin() {
 
       </main>
       <style jsx global>{`
-        /* Triệt tiêu viền trắng mặc định của trình duyệt */
-        body { 
-          margin: 0; 
-          padding: 0; 
-          background-color: #0f1115; 
-        }
-
-        /* Độ lại thanh cuộn (Scrollbar) cho ra dáng Premium */
-        ::-webkit-scrollbar { 
-          width: 8px; 
-          height: 8px; 
-        }
-        ::-webkit-scrollbar-track { 
-          background: #0f1115; 
-        }
-        ::-webkit-scrollbar-thumb { 
-          background: #374151; 
-          border-radius: 4px; 
-        }
-        ::-webkit-scrollbar-thumb:hover { 
-          background: #4b5563; 
-        }
-
-        /* Hiệu ứng trượt của thông báo Copy */
+        body { margin: 0; padding: 0; background-color: #0f1115; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f1115; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
         @keyframes slideIn {
           from { transform: translateY(100%); opacity: 0; }
           to { transform: translateY(0); opacity: 1; }
