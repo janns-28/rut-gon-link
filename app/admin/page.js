@@ -28,38 +28,18 @@ export default function PremiumAdmin() {
         supabase.from('click_logs').select('*')
       ]);
       
-      // Giả sử bảng links đã có cột is_active (boolean), nếu chưa có thì map mặc định là true
-      const formattedLinks = linksRes.data ? linksRes.data.map(l => ({ ...l, is_active: l.is_active !== false })) : [];
-      setLinks(formattedLinks);
+      if (linksRes.data) setLinks(linksRes.data);
       if (logsRes.data) setClickLogs(logsRes.data);
       setLoading(false);
     }
     fetchData();
   }, []);
 
-  // --- LOGIC MỚI: BẬT/TẮT LINK ---
-  const handleToggleStatus = async (e, slug, currentStatus) => {
-    e.stopPropagation(); // Ngăn sự kiện click vào row
-    const newStatus = !currentStatus;
-    // Update local state nhanh để UI mượt
-    setLinks(links.map(l => l.slug === slug ? { ...l, is_active: newStatus } : l));
-    setToast(newStatus ? `▶️ Đã mở luồng cho /${slug}` : `⏸️ Đã ngắt luồng /${slug}`);
-    setTimeout(() => setToast(''), 2500);
-
-    // Update DB (Cần đảm bảo bảng links có cột is_active)
-    try {
-      await supabase.from('links').update({ is_active: newStatus }).eq('slug', slug);
-    } catch (err) {
-      console.error("Lỗi cập nhật trạng thái", err);
-    }
-  };
-
-  // --- TÍNH TOÁN LAST CLICK ---
+  // --- TÍNH TOÁN LAST CLICK (VẪN GIỮ LẠI VÌ NÓ HỮU ÍCH) ---
   const getLastClickInfo = (slug) => {
     const logs = clickLogs.filter(log => log.slug === slug);
     if (logs.length === 0) return { text: 'Chưa nổ số', color: '#64748b', isDead: false };
     
-    // Sort logs để lấy cái mới nhất (đảm bảo tính chính xác nếu data ko sort sẵn)
     logs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const lastLogTime = new Date(logs[0].created_at);
     const now = new Date();
@@ -115,7 +95,7 @@ export default function PremiumAdmin() {
     }
   };
 
-  // --- XỬ LÝ DỮ LIỆU TAB THỐNG KÊ (Giữ nguyên của mày) ---
+  // --- XỬ LÝ DỮ LIỆU TAB THỐNG KÊ ---
   const clickCounts = clickLogs.reduce((acc, log) => {
     acc[log.slug] = (acc[log.slug] || 0) + 1;
     return acc;
@@ -228,7 +208,6 @@ export default function PremiumAdmin() {
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', whiteSpace: 'nowrap' }}>
                 <thead>
                   <tr style={{ background: '#181b23', borderBottom: '1px solid #1f2937' }}>
-                    <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Bật/Tắt</th>
                     <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Mã Rút Gọn</th>
                     <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Link Gốc & Tín Hiệu</th>
                     <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right' }}>Thao tác</th>
@@ -236,14 +215,14 @@ export default function PremiumAdmin() {
                 </thead>
                 <tbody>
                   {Object.keys(groupedLinks).length === 0 ? (
-                    <tr><td colSpan="4" style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Không tìm thấy chiến dịch nào.</td></tr>
+                    <tr><td colSpan="3" style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Không tìm thấy chiến dịch nào.</td></tr>
                   ) : (
                     Object.entries(groupedLinks).map(([netName, group]) => {
                       const isExpanded = search !== '' || expandedGroups[netName];
                       return (
                         <React.Fragment key={netName}>
                           <tr onClick={() => toggleGroup(netName)} style={{ background: '#1e293b', borderBottom: '1px solid #334155', cursor: 'pointer', transition: 'background 0.2s', userSelect: 'none' }} onMouseEnter={(e) => e.currentTarget.style.background = '#334155'} onMouseLeave={(e) => e.currentTarget.style.background = '#1e293b'}>
-                            <td colSpan="4" style={{ padding: '12px 24px', fontWeight: '700', color: group.info.text }}>
+                            <td colSpan="3" style={{ padding: '12px 24px', fontWeight: '700', color: group.info.text }}>
                               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                                   <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: group.info.text }}></span>
@@ -257,18 +236,9 @@ export default function PremiumAdmin() {
                           {isExpanded && group.items.map((l) => {
                             const lastClick = getLastClickInfo(l.slug);
                             return (
-                              <tr key={l.id} style={{ borderBottom: '1px solid #1f2937', transition: 'background 0.15s', animation: 'fadeIn 0.2s ease-out', opacity: l.is_active ? 1 : 0.4 }} onMouseEnter={(e) => e.currentTarget.style.background = '#181b23'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                                {/* Cột 1: Nút Toggle */}
-                                <td style={{ padding: '16px 24px' }}>
-                                  <div 
-                                    onClick={(e) => handleToggleStatus(e, l.slug, l.is_active)}
-                                    style={{ width: '40px', height: '22px', background: l.is_active ? '#10b981' : '#475569', borderRadius: '11px', position: 'relative', cursor: 'pointer', transition: 'background 0.3s' }}
-                                  >
-                                    <div style={{ position: 'absolute', top: '2px', left: l.is_active ? '20px' : '2px', width: '18px', height: '18px', background: '#fff', borderRadius: '50%', transition: 'left 0.3s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
-                                  </div>
-                                </td>
+                              <tr key={l.id} style={{ borderBottom: '1px solid #1f2937', transition: 'background 0.15s', animation: 'fadeIn 0.2s ease-out' }} onMouseEnter={(e) => e.currentTarget.style.background = '#181b23'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                                 
-                                {/* Cột 2: Mã Rút Gọn */}
+                                {/* Cột 1: Mã Rút Gọn */}
                                 <td style={{ padding: '16px 24px' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <span style={{ color: '#64748b' }}>/</span>
@@ -276,7 +246,7 @@ export default function PremiumAdmin() {
                                   </div>
                                 </td>
 
-                                {/* Cột 3: Link Gốc & Tín Hiệu (Gộp lại cho gọn) */}
+                                {/* Cột 2: Link Gốc & Tín Hiệu */}
                                 <td style={{ padding: '16px 24px', maxWidth: '350px' }}>
                                   <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', color: '#cbd5e1', fontSize: '0.9rem', marginBottom: '4px' }} title={l.original_url}>{l.original_url}</div>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: '500', color: lastClick.color }}>
@@ -287,7 +257,7 @@ export default function PremiumAdmin() {
                                   </div>
                                 </td>
 
-                                {/* Cột 4: Thao tác */}
+                                {/* Cột 3: Thao tác */}
                                 <td style={{ padding: '16px 24px', textAlign: 'right' }}>
                                   <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                                     <button onClick={(e) => handleCopy(e, l.slug)} title="Copy" style={{ background: '#374151', color: '#d1d5db', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>
@@ -308,7 +278,7 @@ export default function PremiumAdmin() {
           </div>
         ) : (
           /* =========================================
-                      GIAO DIỆN TAB THỐNG KÊ (Giữ y nguyên)
+                      GIAO DIỆN TAB THỐNG KÊ
              ========================================= */
           <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
             <header style={{ marginBottom: '40px' }}>
