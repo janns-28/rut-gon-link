@@ -1,9 +1,9 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 
-// 1. Danh sách ngày lễ đầy đủ (Dương lịch)
+// 1. Danh sách ngày lễ đầy đủ (Dương lịch) - Giữ nguyên
 const HOLIDAYS = {
-  '01-01': 'Tết Dương Lịch - Khởi đầu mới rực rỡ!',
+  '01-01': 'Tết Dương Lịch - Khởi đầu rực rỡ!',
   '14-02': 'Lễ Tình Nhân - Nay có ai tặng quà chưa ní?',
   '27-02': 'Ngày Thầy Thuốc Việt Nam',
   '08-03': 'Quốc Tế Phụ Nữ - Nhớ nịnh vợ/người yêu nha.',
@@ -38,7 +38,7 @@ const HOLIDAYS = {
   '31-12': 'Đêm Giao Thừa - Chuẩn bị quẩy thôi!'
 };
 
-// 2. Kho câu nói hài hước cho ngày thường
+// 2. Kho câu nói hài hước - Giữ nguyên
 const FUNNY_QUOTES = [
   "Nay không có lễ gì đâu, đi làm tiếp đi ní.",
   "Ngày bình thường, tim vẫn đập nhưng ví không tăng.",
@@ -53,14 +53,46 @@ const FUNNY_QUOTES = [
   "Lịch báo: Hôm nay bạn vẫn chưa trúng số."
 ];
 
-export default function ProfessionalClock() {
+// Thành phần con xử lý việc hiện số và FOUC
+const SafeNumber = ({ value, type = 'clock' }) => {
+  const isClock = type === 'clock';
+  const isLabel = label => label === 'NGÀY';
+  
+  return (
+    <span className={`number ${isClock ? 'big' : 'small'} ${type}`}>
+      {String(value).padStart(type === 'NGÀY' ? 1 : 2, '0')}
+      <style jsx>{`
+        .number {
+          /* DÙNG FONT POPSINS LÀM FONT SỐ CHO MỀM MẠI */
+          font-family: 'Poppins', 'Inter', sans-serif;
+          font-variant-numeric: tabular-nums;
+          font-weight: 800;
+          color: #f8fafc;
+        }
+        .number.big { font-size: clamp(4rem, 15vw, 12rem); letter-spacing: -6px; animation: fadeInClock 0.8s ease-out; filter: drop-shadow(0 0 20px rgba(255,255,255,0.08)); }
+        .number.small { font-size: clamp(2rem, 6vw, 5rem); color: #cbd5e1; }
+        .number.countdown { font-weight: 700; color: #cbd5e1; }
+        
+        @keyframes fadeInClock { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
+    </span>
+  );
+};
+
+export default function SofterProfessionalClock() {
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState(new Date());
   const [quote, setQuote] = useState('');
 
   useEffect(() => {
+    // IMPORT FONT POPSINS TRỰC TIẾP TRONG COMPONENT
+    const poppinsLink = document.createElement('link');
+    poppinsLink.href = 'https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&display=swap';
+    poppinsLink.rel = 'stylesheet';
+    document.head.appendChild(poppinsLink);
+
     setMounted(true);
-    // Chọn câu nói hài hước dựa trên ngày (để mỗi ngày 1 câu khác nhau nhưng cố định trong ngày đó)
+    // Chọn câu hài hước
     const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
     setQuote(FUNNY_QUOTES[dayOfYear % FUNNY_QUOTES.length]);
 
@@ -68,7 +100,7 @@ export default function ProfessionalClock() {
     return () => clearInterval(timer);
   }, []);
 
-  if (!mounted) return null;
+  if (!mounted) return <div style={{ backgroundColor: '#0f1115', minHeight: '100vh' }}></div>;
 
   // Tính toán đếm ngược
   const target = new Date(`January 1, ${now.getFullYear() + 1} 00:00:00`).getTime();
@@ -84,128 +116,106 @@ export default function ProfessionalClock() {
 
   return (
     <main className="main-wrapper">
-      <div className="glass-card">
-        {/* Header: Ngày tháng */}
-        <div className="header-zone">
-          <p className="date-display">
-            {now.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
-          </p>
+      <div className="ambient-content">
+        
+        {/* Phần 1: Ngày tháng năm */}
+        <p className="date-str">
+          {now.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+        </p>
+        
+        {/* Phần 2: Đồng hồ GIỜ PHÚT GIÂY (Mềm Mại) */}
+        <div className="main-clock-display">
+          <SafeNumber value={now.getHours()} type="clock" />
+          <span className="separator-pulse">:</span>
+          <SafeNumber value={now.getMinutes()} type="clock" />
+          <span className="separator-pulse">:</span>
+          <SafeNumber value={now.getSeconds()} type="clock" />
         </div>
 
-        {/* Center: Đồng hồ lớn */}
-        <div className="clock-zone">
-          <h1 className="main-clock">
-            {now.toLocaleTimeString('vi-VN', { hour12: false })}
-          </h1>
+        {/* Phần 3: Lễ hoặc Câu Hài Hước */}
+        <div className="info-area">
+          {todayHoliday ? (
+            <div className="holiday-display active">✨ {todayHoliday} ✨</div>
+          ) : (
+            <div className="funny-display">💬 {quote}</div>
+          )}
         </div>
 
-        {/* Message: Lễ hoặc Câu hài hước */}
-        <div className="message-zone">
-          <div className={`message-pill ${todayHoliday ? 'holiday' : ''}`}>
-            {todayHoliday ? (
-              <span className="holiday-text">✨ {todayHoliday} ✨</span>
-            ) : (
-              <span className="funny-text">💬 {quote}</span>
-            )}
+        <div className="ambient-divider"></div>
+
+        {/* Phần 4: Đếm ngược cuối năm (Mềm Mại) */}
+        <div className="countdown-area">
+          <p className="countdown-label">ĐẾM NGƯỢC ĐẾN NĂM MỚI {now.getFullYear() + 1}</p>
+          <div className="timer-grid">
+            <div className="unit"><SafeNumber value={d} type="countdown" /><span className="lab">NGÀY</span></div>
+            <div className="sep">:</div>
+            <div className="unit"><SafeNumber value={h} type="countdown" /><span className="lab">GIỜ</span></div>
+            <div className="sep">:</div>
+            <div className="unit"><SafeNumber value={m} type="countdown" /><span className="lab">PHÚT</span></div>
+            <div className="sep">:</div>
+            <div className="unit"><SafeNumber value={s} type="countdown" /><span className="lab">GIÂY</span></div>
           </div>
         </div>
 
-        {/* Footer: Grid đếm ngược */}
-        <div className="countdown-zone">
-          <p className="countdown-label">HÀNH TRÌNH ĐẾN NĂM {now.getFullYear() + 1}</p>
-          <div className="grid-timer">
-            <div className="timer-item">
-              <span className="v">{d}</span>
-              <span className="l">NGÀY</span>
-            </div>
-            <div className="timer-item">
-              <span className="v">{String(h).padStart(2, '0')}</span>
-              <span className="l">GIỜ</span>
-            </div>
-            <div className="timer-item">
-              <span className="v">{String(m).padStart(2, '0')}</span>
-              <span className="l">PHÚT</span>
-            </div>
-            <div className="timer-item">
-              <span className="v">{String(s).padStart(2, '0')}</span>
-              <span className="l">GIÂY</span>
-            </div>
-          </div>
-        </div>
       </div>
 
-      <style jsx>{`
+      <style jsx global>{`
+        body {
+          margin: 0; padding: 0;
+          background-color: #0f1115; /* */
+          color: #fff;
+          font-family: 'Inter', system-ui, sans-serif;
+          overflow: hidden;
+        }
+
         .main-wrapper {
           height: 100vh; width: 100vw;
-          background-color: #0f1115; /* */
-          background-image: 
-            radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-            radial-gradient(at 50% 0%, hsla(225,39%,30%,0.3) 0, transparent 50%);
           display: flex; justify-content: center; align-items: center;
-          color: #fff; font-family: 'Inter', sans-serif; overflow: hidden;
+          background: #0f1115;
+          background: radial-gradient(circle at center, #1e1b4b 0%, #0f1115 100%);
         }
 
-        .glass-card {
-          width: 90%; max-width: 800px;
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.05);
-          border-radius: 40px;
-          padding: 60px 40px;
-          text-align: center;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        .ambient-content { text-align: center; }
+
+        .date-str {
+          color: #818cf8; letter-spacing: 4px; font-weight: 700;
+          text-transform: uppercase; font-size: clamp(0.9rem, 1.5vw, 1.2rem); margin: 0 0 20px 0;
         }
 
-        .date-display {
-          color: #6366f1; font-weight: 600; letter-spacing: 2px;
-          text-transform: uppercase; font-size: 0.9rem; margin: 0;
+        .main-clock-display {
+          display: flex; align-items: center; justify-content: center; gap: 10px;
+          margin: 20px 0;
         }
 
-        .main-clock {
-          font-size: clamp(4rem, 15vw, 10rem);
-          font-weight: 900; line-height: 1; margin: 20px 0;
-          letter-spacing: -5px; color: #f8fafc;
-          filter: drop-shadow(0 0 30px rgba(255,255,255,0.1));
+        .separator-pulse {
+          font-size: clamp(3rem, 10vw, 8rem); font-weight: 300; color: #475569;
+          margin-bottom: 30px; animation: pulse 1.5s infinite;
         }
 
-        .message-zone { margin: 30px 0 50px 0; min-height: 60px; display: flex; justify-content: center; }
+        .info-area { margin: 30px 0 60px 0; min-height: 40px; display: flex; justify-content: center; }
+        .holiday-display { font-size: 1.5rem; font-weight: 700; color: #fbbf24; text-shadow: 0 0 20px rgba(251, 191, 36, 0.4); animation: fadeIn 1s; }
+        .funny-display { font-size: 1.3rem; font-weight: 500; color: #94a3b8; font-style: italic; animation: fadeIn 1s; }
+
+        .ambient-divider { height: 1px; width: 120px; background: #334155; margin: 40px auto; }
+
+        .countdown-area { animation: fadeInCountdown 1s ease-out 0.5s; animation-fill-mode: both; }
+        .countdown-label { font-size: clamp(0.7rem, 1vw, 0.9rem); color: #64748b; font-weight: 800; letter-spacing: 5px; margin-bottom: 25px; }
         
-        .message-pill {
-          background: rgba(255,255,255,0.05);
-          padding: 12px 24px; border-radius: 100px;
-          border: 1px solid rgba(255,255,255,0.1);
-          max-width: 80%; transition: all 0.3s;
-        }
+        .timer-grid { display: flex; align-items: center; justify-content: center; gap: 30px; }
+        .unit { display: flex; flex-direction: column; min-width: 80px; }
+        .lab { font-size: clamp(0.6rem, 0.8vw, 0.8rem); color: #64748b; font-weight: 800; margin-top: 8px; letter-spacing: 2px; }
+        .sep { font-size: 2rem; font-weight: 300; color: #1e293b; padding-bottom: 30px; }
 
-        .message-pill.holiday {
-          background: rgba(99, 102, 241, 0.1);
-          border-color: rgba(99, 102, 241, 0.3);
-          box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
-        }
+        @keyframes pulse { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInCountdown { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .holiday-text { color: #818cf8; font-weight: 700; font-size: 1.2rem; }
-        .funny-text { color: #94a3b8; font-style: italic; font-size: 1.1rem; }
-
-        .countdown-label {
-          font-size: 0.75rem; color: #475569; font-weight: 800;
-          letter-spacing: 4px; margin-bottom: 25px;
-        }
-
-        .grid-timer { display: flex; justify-content: center; gap: 40px; }
-        
-        .timer-item { display: flex; flex-direction: column; align-items: center; }
-        
-        .v { font-size: 2.5rem; font-weight: 800; color: #cbd5e1; font-variant-numeric: tabular-nums; }
-        
-        .l { font-size: 0.65rem; color: #64748b; font-weight: 700; margin-top: 8px; letter-spacing: 2px; }
-
-        @media (max-width: 640px) {
-          .glass-card { padding: 40px 20px; }
-          .grid-timer { gap: 15px; }
-          .v { font-size: 1.5rem; }
-          .l { font-size: 0.5rem; }
+        @media (max-width: 600px) {
+          .timer-grid { gap: 10px; }
+          .unit { min-width: 50px; }
+          .sep { font-size: 1.2rem; }
         }
       `}</style>
-    </main>
+    </div>
   );
 }
