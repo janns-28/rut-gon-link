@@ -95,7 +95,7 @@ export default function PremiumAdmin() {
     }
   };
 
-  const getLastClickInfo = (slug) => {
+const getLastClickInfo = (slug) => {
     const logs = clickLogs.filter(log => log.slug === slug);
     if (logs.length === 0) return { text: 'Chưa có click', color: '#64748b', isDead: false };
     
@@ -106,7 +106,7 @@ export default function PremiumAdmin() {
     const totalClicks = logs.length;
 
     if (diffHours < 1) {
-      // Đếm số click cắn được trong 1 giờ qua
+      // Đếm số lượng click đớp được trong vòng 1 tiếng
       const recentClicks = logs.filter(log => (now - new Date(log.created_at)) / (1000 * 60 * 60) < 1).length;
       return { text: `Vừa cắn ${recentClicks} số 🔥 (Tổng: ${totalClicks})`, color: '#10b981', isDead: false };
     }
