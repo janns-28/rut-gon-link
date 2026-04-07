@@ -19,11 +19,10 @@ export default function PremiumAdmin() {
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState('');
   const [expandedGroups, setExpandedGroups] = useState({});
-  const [activeTab, setActiveTab] = useState('links'); // 'links' hoặc 'stats'
+  const [activeTab, setActiveTab] = useState('links'); 
 
   useEffect(() => {
     async function fetchData() {
-      // Tải song song cả Links và Click Logs
       const [linksRes, logsRes] = await Promise.all([
         supabase.from('links').select('*').order('created_at', { ascending: false }),
         supabase.from('click_logs').select('*')
@@ -36,7 +35,19 @@ export default function PremiumAdmin() {
     fetchData();
   }, []);
 
-  // --- XỬ LÝ DỮ LIỆU TAB LINKS ---
+  // CHỈ THÊM ĐÚNG LOGIC NÀY ĐỂ BÁO TÍN HIỆU
+  const getLastClickInfo = (slug) => {
+    const logs = clickLogs.filter(log => log.slug === slug);
+    if (logs.length === 0) return { text: 'Chưa có khách', color: '#64748b' };
+    
+    logs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    const diffHours = (new Date() - new Date(logs[0].created_at)) / (1000 * 60 * 60);
+
+    if (diffHours < 1) return { text: 'Vừa cắn số 🔥', color: '#10b981' };
+    if (diffHours < 3) return { text: `Tầm ${Math.floor(diffHours)}h trước`, color: '#fbbf24' };
+    return { text: `Đứng im >${Math.floor(diffHours)}h ⚠️`, color: '#ef4444' };
+  };
+
   const filteredLinks = links.filter(l => 
     l.slug.toLowerCase().includes(search.toLowerCase()) || 
     l.original_url.toLowerCase().includes(search.toLowerCase())
@@ -79,8 +90,6 @@ export default function PremiumAdmin() {
     }
   };
 
-  // --- XỬ LÝ DỮ LIỆU TAB THỐNG KÊ ---
-  // 1. Đếm click theo Slug (Leaderboard)
   const clickCounts = clickLogs.reduce((acc, log) => {
     acc[log.slug] = (acc[log.slug] || 0) + 1;
     return acc;
@@ -97,7 +106,6 @@ export default function PremiumAdmin() {
     })
     .sort((a, b) => b.count - a.count);
 
-  // 2. Phân tích Nguồn Traffic
   const referrerCounts = clickLogs.reduce((acc, log) => {
     let ref = log.referrer || 'Direct (Truy cập thẳng)';
     const lowerRef = ref.toLowerCase();
@@ -115,7 +123,6 @@ export default function PremiumAdmin() {
   }, {});
   const topReferrers = Object.entries(referrerCounts).sort((a, b) => b[1] - a[1]);
 
-  // 3. Phân tích Thiết bị (Hệ điều hành)
   const deviceCounts = clickLogs.reduce((acc, log) => {
     const ua = (log.user_agent || '').toLowerCase();
     let device = 'Khác';
@@ -129,7 +136,7 @@ export default function PremiumAdmin() {
   const topDevices = Object.entries(deviceCounts).sort((a, b) => b[1] - a[1]);
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0f1115', color: '#e2e8f0', fontFamily: '"Inter", system-ui, sans-serif' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0f1115', color: '#e2e8f0', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif' }}>
       
       {toast && (
         <div style={{ position: 'fixed', bottom: '20px', right: '20px', background: toast.includes('❌') ? '#ef4444' : '#10b981', color: '#fff', padding: '12px 24px', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)', zIndex: 50, fontWeight: '500', animation: 'slideIn 0.3s ease-out' }}>
@@ -137,7 +144,7 @@ export default function PremiumAdmin() {
         </div>
       )}
 
-      {/* SIDEBAR */}
+      {/* SIDEBAR BẢN GỐC CỦA MÀY */}
       <aside style={{ width: '260px', borderRight: '1px solid #1f2937', backgroundColor: '#111318', padding: '24px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '40px' }}>
           <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff' }}>B</div>
@@ -162,7 +169,6 @@ export default function PremiumAdmin() {
         </nav>
       </aside>
 
-      {/* MAIN CONTENT */}
       <main style={{ flex: 1, padding: '40px 50px', overflowY: 'auto' }}>
         
         {loading ? (
@@ -170,9 +176,6 @@ export default function PremiumAdmin() {
             <div style={{ color: '#64748b', fontSize: '1.2rem' }}>Đang đồng bộ dữ liệu hệ thống... ⏳</div>
           </div>
         ) : activeTab === 'links' ? (
-          /* =========================================
-                      GIAO DIỆN TAB QUẢN LÝ LINKS 
-             ========================================= */
           <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
               <div>
@@ -194,6 +197,7 @@ export default function PremiumAdmin() {
               </div>
             </div>
 
+            {/* BẢNG LINKS BẢN GỐC Y XÌ */}
             <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', whiteSpace: 'nowrap' }}>
                 <thead>
@@ -224,20 +228,31 @@ export default function PremiumAdmin() {
                             </td>
                           </tr>
                           
-                          {isExpanded && group.items.map((l) => (
-                            <tr key={l.id} style={{ borderBottom: '1px solid #1f2937', transition: 'background 0.15s', animation: 'fadeIn 0.2s ease-out' }} onMouseEnter={(e) => e.currentTarget.style.background = '#181b23'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                              <td style={{ padding: '16px 24px' }}><div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: '#64748b' }}>/</span><strong style={{ color: '#f8fafc', letterSpacing: '0.5px' }}>{l.slug}</strong></div></td>
-                              <td style={{ padding: '16px 24px', maxWidth: '350px' }}><div style={{ overflow: 'hidden', textOverflow: 'ellipsis', color: '#cbd5e1', fontSize: '0.9rem' }} title={l.original_url}>{l.original_url}</div></td>
-                              <td style={{ padding: '16px 24px', color: '#94a3b8', fontSize: '0.9rem' }}>{new Date(l.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
-                              <td style={{ padding: '16px 24px', textAlign: 'right' }}>
-                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                  <button onClick={() => handleCopy(l.slug)} title="Copy" style={{ background: '#374151', color: '#d1d5db', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>
-                                  <a href={l.original_url} target="_blank" rel="noopener noreferrer" title="Mở Link" style={{ background: '#374151', color: '#d1d5db', border: 'none', padding: '8px', borderRadius: '8px', display: 'flex' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
-                                  <button onClick={() => handleDelete(l.slug)} title="Xóa" style={{ background: '#374151', color: '#fca5a5', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
+                          {isExpanded && group.items.map((l) => {
+                            const lastClick = getLastClickInfo(l.slug);
+                            return (
+                              <tr key={l.id} style={{ borderBottom: '1px solid #1f2937', transition: 'background 0.15s', animation: 'fadeIn 0.2s ease-out' }} onMouseEnter={(e) => e.currentTarget.style.background = '#181b23'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                                <td style={{ padding: '16px 24px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: '#64748b' }}>/</span><strong style={{ color: '#f8fafc', letterSpacing: '0.5px' }}>{l.slug}</strong></div>
+                                </td>
+                                
+                                {/* CHÈN ĐÚNG LOGIC TÍN HIỆU VÀO ĐÂY */}
+                                <td style={{ padding: '16px 24px', maxWidth: '350px' }}>
+                                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', color: '#cbd5e1', fontSize: '0.9rem' }} title={l.original_url}>{l.original_url}</div>
+                                  <div style={{ color: lastClick.color, fontSize: '0.8rem', marginTop: '4px', fontWeight: '500' }}>{lastClick.text}</div>
+                                </td>
+                                
+                                <td style={{ padding: '16px 24px', color: '#94a3b8', fontSize: '0.9rem' }}>{new Date(l.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
+                                <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                    <button onClick={() => handleCopy(l.slug)} title="Copy" style={{ background: '#374151', color: '#d1d5db', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>
+                                    <a href={l.original_url} target="_blank" rel="noopener noreferrer" title="Mở Link" style={{ background: '#374151', color: '#d1d5db', border: 'none', padding: '8px', borderRadius: '8px', display: 'flex' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
+                                    <button onClick={() => handleDelete(l.slug)} title="Xóa" style={{ background: '#374151', color: '#fca5a5', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </React.Fragment>
                       );
                     })
@@ -247,16 +262,13 @@ export default function PremiumAdmin() {
             </div>
           </div>
         ) : (
-          /* =========================================
-                      GIAO DIỆN TAB THỐNG KÊ (MỚI)
-             ========================================= */
+          /* THỐNG KÊ BẢN GỐC Y XÌ ĐÚC */
           <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
             <header style={{ marginBottom: '40px' }}>
               <h1 style={{ fontSize: '1.8rem', fontWeight: '700', color: '#f8fafc', margin: '0 0 8px 0' }}>Báo Cáo Hiệu Suất</h1>
               <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.95rem' }}>Phân tích lượng truy cập thực tế từ các phễu mồi.</p>
             </header>
 
-            {/* 3 THẺ TỔNG QUAN */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
               <div style={{ background: '#111318', padding: '24px', borderRadius: '16px', border: '1px solid #1f2937', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
                 <div style={{ color: '#94a3b8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: '600' }}>Tổng số Click (All-time)</div>
@@ -277,10 +289,7 @@ export default function PremiumAdmin() {
               </div>
             </div>
 
-            {/* PHẦN BIỂU ĐỒ BARS */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-              
-              {/* Box Nguồn Traffic */}
               <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', padding: '24px' }}>
                 <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#f8fafc' }}>🌐 Phân bổ Nguồn Traffic</h3>
                 {topReferrers.length === 0 ? <p style={{ color: '#64748b' }}>Chưa có dữ liệu</p> : 
@@ -301,9 +310,8 @@ export default function PremiumAdmin() {
                 }
               </div>
 
-              {/* Box Thiết Bị */}
               <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', padding: '24px' }}>
-                <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#f8fafc' }}>📱 Tỷ lệ Hệ điều hành (Tối ưu App)</h3>
+                <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#f8fafc' }}>📱 Tỷ lệ Hệ điều hành</h3>
                 {topDevices.length === 0 ? <p style={{ color: '#64748b' }}>Chưa có dữ liệu</p> : 
                   topDevices.map(([name, count], index) => {
                     const percent = Math.round((count / clickLogs.length) * 100);
@@ -323,7 +331,6 @@ export default function PremiumAdmin() {
               </div>
             </div>
 
-            {/* BẢNG XẾP HẠNG CHI TIẾT */}
             <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', padding: '24px' }}>
               <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#f8fafc' }}>🔥 Bảng Xếp Hạng Chiến Dịch</h3>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
@@ -354,6 +361,11 @@ export default function PremiumAdmin() {
           </div>
         )}
       </main>
+
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+      `}} />
     </div>
   );
 }
