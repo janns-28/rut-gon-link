@@ -76,7 +76,7 @@ export default function PremiumAdmin() {
 
   const handleDelete = async (e, slug) => {
     e.stopPropagation();
-    const confirm = window.confirm(`Cảnh báo: Ông có chắc chắn muốn xóa vĩnh viễn link /${slug} không?`);
+    const confirm = window.confirm(`Cảnh báo: Má có chắc chắn muốn xóa vĩnh viễn link /${slug} không?`);
     if (!confirm) return;
     const previousLinks = [...links];
     setLinks(links.filter(l => l.slug !== slug));
@@ -138,9 +138,9 @@ export default function PremiumAdmin() {
   }, {});
   const topDevices = Object.entries(deviceCounts).sort((a, b) => b[1] - a[1]);
 
-  // CSS classes inlined for the new Soft Light Theme
-  const cardStyle = { background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)' };
-  const actionBtnStyle = { background: '#f1f5f9', color: '#64748b', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', display: 'flex', transition: 'all 0.2s' };
+  // CSS classes chuẩn style "từng ô" của ảnh SaaS B2B
+  const cardStyle = { background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', overflow: 'hidden' };
+  const actionBtnStyle = { background: '#f1f5f9', color: '#64748b', border: 'none', padding: '10px', borderRadius: '10px', cursor: 'pointer', display: 'flex', transition: 'all 0.2s' };
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f4f5f8', color: '#1e293b', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif' }}>
@@ -151,7 +151,7 @@ export default function PremiumAdmin() {
         </div>
       )}
 
-      {/* SIDEBAR - TRẮNG SÁNG */}
+      {/* SIDEBAR */}
       <aside style={{ width: '260px', borderRight: '1px solid #e2e8f0', backgroundColor: '#ffffff', padding: '24px', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '40px' }}>
           <div style={{ width: '36px', height: '36px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff', fontSize: '1.1rem', boxShadow: '0 4px 10px rgba(59, 130, 246, 0.3)' }}>B</div>
@@ -184,95 +184,87 @@ export default function PremiumAdmin() {
             <div style={{ color: '#94a3b8', fontSize: '1.2rem', fontWeight: '500' }}>Đang đồng bộ dữ liệu hệ thống... ⏳</div>
           </div>
         ) : activeTab === 'links' ? (
-          <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+          <div style={{ animation: 'fadeIn 0.3s ease-out', maxWidth: '1000px' }}>
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px' }}>
               <div>
                 <h1 style={{ fontSize: '1.8rem', fontWeight: '800', color: '#0f172a', margin: '0 0 6px 0', letterSpacing: '-0.5px' }}>Chiến dịch Affiliate</h1>
-                <p style={{ color: '#64748b', margin: 0, fontSize: '0.95rem' }}>Theo dõi và quản lý các liên kết chuyển hướng của bạn.</p>
-              </div>
-              <div style={{ display: 'flex', gap: '20px' }}>
-                <div style={{ ...cardStyle, padding: '12px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <span style={{ fontSize: '1.5rem', fontWeight: '800', color: '#0f172a' }}>{links.length}</span>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '2px', fontWeight: '600' }}>Tổng Link</span>
-                </div>
+                <p style={{ color: '#64748b', margin: 0, fontSize: '0.95rem' }}>Quản lý các liên kết chuyển hướng của bạn theo từng "ô" Nền Tảng.</p>
               </div>
             </header>
 
-            <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
-              <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
-                <svg style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                <input type="text" placeholder="Tìm kiếm mã hoặc link gốc..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: '100%', padding: '12px 16px 12px 44px', borderRadius: '12px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '0.95rem', fontWeight: '500', outline: 'none', transition: 'all 0.2s', boxSizing: 'border-box', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }} />
+            {/* Ô 1: Thanh Tìm Kiếm & Thống Kê Nhanh */}
+            <div style={{ display: 'flex', gap: '16px', marginBottom: '32px' }}>
+              <div style={{ ...cardStyle, position: 'relative', flex: 1, display: 'flex', alignItems: 'center', padding: '4px' }}>
+                <svg style={{ position: 'absolute', left: '16px', color: '#94a3b8' }} width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <input type="text" placeholder="Tìm kiếm mã rút gọn hoặc link gốc..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ width: '100%', padding: '12px 16px 12px 44px', border: 'none', background: 'transparent', color: '#0f172a', fontSize: '0.95rem', fontWeight: '500', outline: 'none' }} />
+              </div>
+              <div style={{ ...cardStyle, padding: '0 24px', display: 'flex', alignItems: 'center', gap: '12px', background: '#f8fafc' }}>
+                <span style={{ fontSize: '1.5rem', fontWeight: '800', color: '#0f172a' }}>{links.length}</span>
+                <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '600' }}>TỔNG LINK</span>
               </div>
             </div>
 
-            <div style={{ ...cardStyle, overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', whiteSpace: 'nowrap' }}>
-                <thead>
-                  <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                    <th style={{ padding: '16px 24px', color: '#64748b', fontWeight: '700', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Mã Rút Gọn</th>
-                    <th style={{ padding: '16px 24px', color: '#64748b', fontWeight: '700', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Link Gốc & Tín Hiệu</th>
-                    <th style={{ padding: '16px 24px', color: '#64748b', fontWeight: '700', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right' }}>Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.keys(groupedLinks).length === 0 ? (
-                    <tr><td colSpan="3" style={{ padding: '40px', textAlign: 'center', color: '#64748b', fontWeight: '500' }}>Không tìm thấy chiến dịch nào.</td></tr>
-                  ) : (
-                    Object.entries(groupedLinks).map(([netName, group]) => {
-                      const isExpanded = search !== '' || expandedGroups[netName];
-                      return (
-                        <React.Fragment key={netName}>
-                          <tr onClick={() => toggleGroup(netName)} style={{ background: '#f1f5f9', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', transition: 'background 0.2s', userSelect: 'none' }} onMouseEnter={(e) => e.currentTarget.style.background = '#e2e8f0'} onMouseLeave={(e) => e.currentTarget.style.background = '#f1f5f9'}>
-                            <td colSpan="3" style={{ padding: '14px 24px', fontWeight: '700', color: group.info.text }}>
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                                  <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: group.info.text }}></span>
-                                  Nền tảng: {netName.toUpperCase()} <span style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: '500', marginLeft: '6px' }}>({group.items.length} link)</span>
-                                </span>
-                                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ color: '#64748b', transition: 'transform 0.3s ease', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+            {/* CÁC Ô NỀN TẢNG (NETWORK CARDS) */}
+            {Object.keys(groupedLinks).length === 0 ? (
+              <div style={{ ...cardStyle, padding: '60px', textAlign: 'center', color: '#64748b', fontWeight: '500' }}>Không tìm thấy link nào phù hợp.</div>
+            ) : (
+              Object.entries(groupedLinks).map(([netName, group]) => {
+                const isExpanded = search !== '' || expandedGroups[netName];
+                return (
+                  <div key={netName} style={{ ...cardStyle, marginBottom: '24px' }}>
+                    {/* Header của Ô */}
+                    <div onClick={() => toggleGroup(netName)} style={{ padding: '20px 24px', background: '#f8fafc', borderBottom: isExpanded ? '1px solid #e2e8f0' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'} onMouseLeave={(e) => e.currentTarget.style.background = '#f8fafc'}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: group.info.text, boxShadow: `0 0 8px ${group.info.text}66` }}></span>
+                        <span style={{ fontWeight: '800', color: '#0f172a', fontSize: '1.05rem', letterSpacing: '0.5px' }}>{netName.toUpperCase()}</span>
+                        <span style={{ background: '#e2e8f0', color: '#475569', padding: '4px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700' }}>{group.items.length} link</span>
+                      </div>
+                      <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" style={{ color: '#64748b', transition: 'transform 0.3s ease', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    
+                    {/* Danh sách link bên trong Ô */}
+                    {isExpanded && (
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        {group.items.map((l, index) => {
+                          const lastClick = getLastClickInfo(l.slug);
+                          const isLastItem = index === group.items.length - 1;
+                          return (
+                            <div key={l.id} style={{ display: 'flex', alignItems: 'center', padding: '20px 24px', borderBottom: isLastItem ? 'none' : '1px solid #e2e8f0', transition: 'background 0.15s' }} onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                              
+                              {/* Cột 1: Mã Rút Gọn */}
+                              <div style={{ flex: '1', minWidth: '150px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ color: '#94a3b8', fontWeight: '600' }}>/</span>
+                                  <strong style={{ color: '#0f172a', letterSpacing: '0.3px', fontSize: '1rem' }}>{l.slug}</strong>
+                                </div>
                               </div>
-                            </td>
-                          </tr>
-                          
-                          {isExpanded && group.items.map((l) => {
-                            const lastClick = getLastClickInfo(l.slug);
-                            return (
-                              <tr key={l.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background 0.15s', animation: 'fadeIn 0.2s ease-out', background: '#ffffff' }} onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'} onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}>
-                                
-                                <td style={{ padding: '16px 24px' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <span style={{ color: '#94a3b8', fontWeight: '600' }}>/</span>
-                                    <strong style={{ color: '#0f172a', letterSpacing: '0.3px', fontSize: '0.95rem' }}>{l.slug}</strong>
-                                  </div>
-                                </td>
 
-                                <td style={{ padding: '16px 24px', maxWidth: '350px' }}>
-                                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', color: '#475569', fontSize: '0.9rem', marginBottom: '6px', fontWeight: '500' }} title={l.original_url}>{l.original_url}</div>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: '600', color: lastClick.color }}>
-                                    {lastClick.isDead ? (
-                                      <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444', animation: 'pulse 2s infinite' }}></span>
-                                    ) : null}
-                                    {lastClick.text}
-                                  </div>
-                                </td>
+                              {/* Cột 2: Link Gốc & Tín Hiệu */}
+                              <div style={{ flex: '2', padding: '0 20px', minWidth: '300px' }}>
+                                <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', color: '#475569', fontSize: '0.9rem', marginBottom: '6px', fontWeight: '500', whiteSpace: 'nowrap', maxWidth: '350px' }} title={l.original_url}>{l.original_url}</div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: '600', color: lastClick.color }}>
+                                  {lastClick.isDead ? (
+                                    <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444', animation: 'pulse 2s infinite' }}></span>
+                                  ) : null}
+                                  {lastClick.text}
+                                </div>
+                              </div>
 
-                                <td style={{ padding: '16px 24px', textAlign: 'right' }}>
-                                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                    <button onClick={(e) => handleCopy(e, l.slug)} title="Copy" style={actionBtnStyle} onMouseEnter={(e) => e.currentTarget.style.background = '#e2e8f0'} onMouseLeave={(e) => e.currentTarget.style.background = '#f1f5f9'}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>
-                                    <a onClick={(e) => e.stopPropagation()} href={l.original_url} target="_blank" rel="noopener noreferrer" title="Mở Link" style={{...actionBtnStyle, textDecoration: 'none'}} onMouseEnter={(e) => e.currentTarget.style.background = '#e2e8f0'} onMouseLeave={(e) => e.currentTarget.style.background = '#f1f5f9'}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
-                                    <button onClick={(e) => handleDelete(e, l.slug)} title="Xóa" style={{...actionBtnStyle, color: '#ef4444', background: '#fee2e2'}} onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'} onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </React.Fragment>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
+                              {/* Cột 3: Thao tác */}
+                              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                <button onClick={(e) => handleCopy(e, l.slug)} title="Copy" style={actionBtnStyle} onMouseEnter={(e) => e.currentTarget.style.background = '#e2e8f0'} onMouseLeave={(e) => e.currentTarget.style.background = '#f1f5f9'}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>
+                                <a onClick={(e) => e.stopPropagation()} href={l.original_url} target="_blank" rel="noopener noreferrer" title="Mở Link" style={{...actionBtnStyle, textDecoration: 'none'}} onMouseEnter={(e) => e.currentTarget.style.background = '#e2e8f0'} onMouseLeave={(e) => e.currentTarget.style.background = '#f1f5f9'}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
+                                <button onClick={(e) => handleDelete(e, l.slug)} title="Xóa" style={{...actionBtnStyle, color: '#ef4444', background: '#fee2e2'}} onMouseEnter={(e) => e.currentTarget.style.background = '#fecaca'} onMouseLeave={(e) => e.currentTarget.style.background = '#fee2e2'}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
         ) : (
           <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
@@ -281,6 +273,7 @@ export default function PremiumAdmin() {
               <p style={{ color: '#64748b', margin: 0, fontSize: '0.95rem' }}>Phân tích lượng truy cập thực tế từ các phễu mồi.</p>
             </header>
 
+            {/* CÁC Ô CHỈ SỐ */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px', marginBottom: '32px' }}>
               <div style={{ ...cardStyle, padding: '24px' }}>
                 <div style={{ color: '#64748b', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', fontWeight: '700' }}>Tổng số Click (All-time)</div>
@@ -301,6 +294,7 @@ export default function PremiumAdmin() {
               </div>
             </div>
 
+            {/* CÁC Ô BIỂU ĐỒ NGUỒN & THIẾT BỊ */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>
               <div style={{ ...cardStyle, padding: '24px' }}>
                 <h3 style={{ margin: '0 0 24px 0', fontSize: '1.1rem', color: '#0f172a', fontWeight: '700' }}>🌐 Phân bổ Nguồn Traffic</h3>
@@ -343,6 +337,7 @@ export default function PremiumAdmin() {
               </div>
             </div>
 
+            {/* Ô BẢNG XẾP HẠNG */}
             <div style={{ ...cardStyle, padding: '24px' }}>
               <h3 style={{ margin: '0 0 24px 0', fontSize: '1.1rem', color: '#0f172a', fontWeight: '700' }}>🔥 Bảng Xếp Hạng Chiến Dịch</h3>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
