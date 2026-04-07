@@ -101,11 +101,18 @@ export default function PremiumAdmin() {
     
     logs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const lastLogTime = new Date(logs[0].created_at);
-    const diffHours = (new Date() - lastLogTime) / (1000 * 60 * 60);
+    const now = new Date();
+    const diffHours = (now - lastLogTime) / (1000 * 60 * 60);
+    const totalClicks = logs.length;
 
-    if (diffHours < 1) return { text: 'Vừa cắn số 🔥', color: '#10b981', isDead: false };
-    if (diffHours < 3) return { text: `Tầm ${Math.floor(diffHours)}h trước`, color: '#fbbf24', isDead: false };
-    return { text: `Đứng im >${Math.floor(diffHours)}h ⚠️`, color: '#ef4444', isDead: true };
+    if (diffHours < 1) {
+      // Đếm số click cắn được trong 1 giờ qua
+      const recentClicks = logs.filter(log => (now - new Date(log.created_at)) / (1000 * 60 * 60) < 1).length;
+      return { text: `Vừa cắn ${recentClicks} số 🔥 (Tổng: ${totalClicks})`, color: '#10b981', isDead: false };
+    }
+    
+    if (diffHours < 3) return { text: `Tầm ${Math.floor(diffHours)}h trước (Tổng: ${totalClicks})`, color: '#fbbf24', isDead: false };
+    return { text: `Đứng im >${Math.floor(diffHours)}h ⚠️ (Tổng: ${totalClicks})`, color: '#ef4444', isDead: true };
   };
 
   const handleDelete = async (slug) => {
@@ -297,7 +304,6 @@ export default function PremiumAdmin() {
                     <tr><td colSpan="4" style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Không tìm thấy chiến dịch nào. Hãy tạo phễu mới.</td></tr>
                   ) : (
                     Object.entries(groupedLinks).map(([netName, group]) => {
-                      // ĐÂY LÀ DÒNG CHỈNH LẠI ĐỂ MẶC ĐỊNH SẼ ĐÓNG, CHỈ MỞ KHI CÓ SEARCH HOẶC BẤM VÀO
                       const isExpanded = search !== '' || expandedGroups[netName] === true;
                       
                       return (
