@@ -2,102 +2,30 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 
-// ==========================================
-// 1. UTILS & HELPERS
-// ==========================================
+// Tối ưu hóa nhận diện các network phổ biến
 const getNetworkInfo = (url) => {
   const lowerUrl = url?.toLowerCase() || '';
-  if (lowerUrl.includes('dinos.click')) return { name: 'Dinos', colorClass: 'text-red-500 bg-red-500' };
-  if (lowerUrl.includes('hl-link')) return { name: 'Hyperlead', colorClass: 'text-indigo-500 bg-indigo-500' };
-  if (lowerUrl.includes('accesstrade')) return { name: 'Accesstrade', colorClass: 'text-amber-500 bg-amber-500' };
-  if (lowerUrl.includes('masoffer')) return { name: 'MasOffer', colorClass: 'text-green-500 bg-green-500' };
-  if (lowerUrl.includes('facebook.com')) return { name: 'Social', colorClass: 'text-blue-500 bg-blue-500' };
-  return { name: 'Direct (Khác)', colorClass: 'text-slate-400 bg-slate-400' };
+  if (lowerUrl.includes('dinos.click')) return { name: 'Dinos', bg: '#fee2e2', text: '#dc2626', border: '#fca5a5' };
+  if (lowerUrl.includes('hl-link')) return { name: 'Hyperlead', bg: '#e0e7ff', text: '#4f46e5', border: '#a5b4fc' };
+  if (lowerUrl.includes('accesstrade')) return { name: 'Accesstrade', bg: '#fef3c7', text: '#d97706', border: '#fcd34d' };
+  if (lowerUrl.includes('masoffer')) return { name: 'MasOffer', bg: '#dcfce7', text: '#16a34a', border: '#86efac' };
+  if (lowerUrl.includes('facebook.com')) return { name: 'Social', bg: '#dbeafe', text: '#2563eb', border: '#93c5fd' };
+  return { name: 'Direct (Khác)', bg: '#f3f4f6', text: '#94a3b8', border: '#4b5563' };
 };
 
-// ==========================================
-// 2. SUB-COMPONENTS
-// ==========================================
-const Toast = ({ message, isError }) => (
-  <div className={`fixed bottom-5 right-5 px-6 py-3 rounded-lg shadow-lg z-50 font-medium animate-[slideIn_0.3s_ease-out] text-white ${isError ? 'bg-red-500' : 'bg-emerald-500'}`}>
-    {message}
-  </div>
-);
-
-const CreateLinkModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
-  const [newUrl, setNewUrl] = useState('');
-  const [customSlug, setCustomSlug] = useState('');
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm">
-      <div className="bg-[#111318] p-8 rounded-2xl border border-gray-800 w-full max-w-md animate-[fadeIn_0.2s_ease-out]">
-        <h2 className="text-2xl font-bold text-slate-50 mb-6">Tạo Phễu Mồi Mới 🚀</h2>
-        <form onSubmit={(e) => { e.preventDefault(); onSubmit(newUrl, customSlug); setNewUrl(''); setCustomSlug(''); }} className="flex flex-col gap-4">
-          <div>
-            <label className="block mb-2 text-sm text-slate-400">Link Đích (Affiliate Link)</label>
-            <input 
-              type="url" required placeholder="https://dinos.click/..." 
-              value={newUrl} onChange={(e) => setNewUrl(e.target.value)}
-              className="w-full p-3 rounded-lg border border-gray-700 bg-slate-800 text-slate-50 outline-none focus:border-blue-500 transition-colors"
-            />
-          </div>
-          <div>
-            <label className="block mb-2 text-sm text-slate-400">Đuôi Link (Slug) - Để trống sẽ Random</label>
-            <div className="flex items-center bg-slate-800 border border-gray-700 rounded-lg px-3 focus-within:border-blue-500 transition-colors">
-              <span className="text-slate-500">/</span>
-              <input 
-                type="text" placeholder="vay-tien-nhanh" 
-                value={customSlug} onChange={(e) => setCustomSlug(e.target.value.replace(/[^a-zA-Z0-9-]/g, ''))}
-                className="w-full p-3 border-none bg-transparent text-slate-50 outline-none"
-              />
-            </div>
-          </div>
-          <div className="flex gap-3 mt-4">
-            <button type="button" onClick={onClose} className="flex-1 py-3 border border-gray-700 text-slate-300 rounded-lg font-semibold hover:bg-gray-800 transition">Hủy</button>
-            <button type="submit" disabled={isSubmitting} className="flex-1 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 disabled:opacity-50 transition">
-              {isSubmitting ? 'Đang tạo...' : 'Tạo Link'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-const Sidebar = ({ activeTab, setActiveTab }) => (
-  <aside className="w-[260px] border-r border-gray-800 bg-[#111318] p-6 flex flex-col">
-    <div className="flex items-center gap-3 mb-10">
-      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center font-bold text-white">B</div>
-      <span className="text-xl font-bold tracking-wide text-slate-50">BINHTIENTI</span>
-    </div>
-    <nav className="flex flex-col gap-2 flex-1">
-      <button onClick={() => setActiveTab('links')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${activeTab === 'links' ? 'bg-gray-800 text-slate-50' : 'text-slate-400 hover:text-slate-200 hover:bg-gray-800/50'}`}>
-        <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-        Quản lý Links
-      </button>
-      <button onClick={() => setActiveTab('stats')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${activeTab === 'stats' ? 'bg-gray-800 text-slate-50' : 'text-slate-400 hover:text-slate-200 hover:bg-gray-800/50'}`}>
-        <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-        Thống kê Traffic
-      </button>
-    </nav>
-  </aside>
-);
-
-// ==========================================
-// 3. MAIN COMPONENT (GOD COMPONENT SPLIT)
-// ==========================================
 export default function PremiumAdmin() {
   const [links, setLinks] = useState([]);
   const [clickLogs, setClickLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [toast, setToast] = useState(null);
+  const [toast, setToast] = useState('');
   const [expandedGroups, setExpandedGroups] = useState({});
   const [activeTab, setActiveTab] = useState('links');
-  
+
+  // State cho Modal tạo link
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newUrl, setNewUrl] = useState('');
+  const [customSlug, setCustomSlug] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -106,32 +34,41 @@ export default function PremiumAdmin() {
 
   async function fetchData() {
     setLoading(true);
-    // Tạm thời giữ lại cách fetch cũ, nhưng về lâu dài hãy gọi supabase.rpc('get_traffic_stats')
     const [linksRes, logsRes] = await Promise.all([
       supabase.from('links').select('*').order('created_at', { ascending: false }),
-      supabase.from('click_logs').select('*') 
+      supabase.from('click_logs').select('*')
     ]);
+    
     if (linksRes.data) setLinks(linksRes.data);
     if (logsRes.data) setClickLogs(logsRes.data);
     setLoading(false);
   }
 
   const showToast = (msg, isError = false) => {
-    setToast({ message: msg, isError });
-    setTimeout(() => setToast(null), 3000);
+    setToast({ text: msg, isError });
+    setTimeout(() => setToast(''), 3000);
   };
 
-  const handleAddLink = async (newUrl, customSlug) => {
+  const handleAddLink = async (e) => {
+    e.preventDefault();
     if (!newUrl) return showToast('❌ Quên nhập link gốc rồi kìa!', true);
+
     setIsSubmitting(true);
     const finalSlug = customSlug.trim() || Math.random().toString(36).substring(2, 8);
 
     try {
-      const { data, error } = await supabase.from('links').insert([{ slug: finalSlug, original_url: newUrl }]).select();
+      const { data, error } = await supabase
+        .from('links')
+        .insert([{ slug: finalSlug, original_url: newUrl }])
+        .select();
+
       if (error) throw error;
+
       setLinks([data[0], ...links]);
       showToast(`✅ Lên camp thành công: /${finalSlug}`);
       setIsModalOpen(false);
+      setNewUrl('');
+      setCustomSlug('');
     } catch (error) {
       showToast('❌ Lỗi: Slug này có thể đã tồn tại!', true);
     } finally {
@@ -139,30 +76,60 @@ export default function PremiumAdmin() {
     }
   };
 
+  const getLastClickInfo = (slug) => {
+    const logs = clickLogs.filter(log => log.slug === slug);
+    if (logs.length === 0) return { text: 'Chưa có click', color: '#64748b', isDead: false };
+    
+    logs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    const lastLogTime = new Date(logs[0].created_at);
+    const diffHours = (new Date() - lastLogTime) / (1000 * 60 * 60);
+
+    if (diffHours < 1) return { text: 'Vừa cắn số 🔥', color: '#10b981', isDead: false };
+    if (diffHours < 3) return { text: `Tầm ${Math.floor(diffHours)}h trước`, color: '#fbbf24', isDead: false };
+    return { text: `Đứng im >${Math.floor(diffHours)}h ⚠️`, color: '#ef4444', isDead: true };
+  };
+
   const handleDelete = async (slug) => {
-    if (!window.confirm(`Xóa vĩnh viễn phễu /${slug}? (Click logs vẫn giữ lại đối soát)`)) return;
+    const confirm = window.confirm(`Cảnh báo: Xóa vĩnh viễn phễu /${slug}? (Click logs vẫn sẽ được giữ lại để check đối soát)`);
+    if (!confirm) return;
+    
     const previousLinks = [...links];
     setLinks(links.filter(l => l.slug !== slug));
     
     try {
       const res = await fetch('/api/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slug }) });
-      if (!res.ok) throw new Error();
-      showToast(`🗑️ Đã dọn dẹp /${slug} thành công!`);
+      if (!res.ok) throw new Error('Lỗi Server');
+      showToast(`🗑️ Đã dọn dẹp /${slug} thành thành công!`);
     } catch (error) {
       setLinks(previousLinks);
-      showToast(`❌ Lỗi không xóa được!`, true);
+      showToast(`❌ Lỗi không xóa được! Vui lòng thử lại.`, true);
     }
   };
 
+  const handleCopy = (slug) => {
+    const fullUrl = `${window.location.origin}/${slug}`;
+    navigator.clipboard.writeText(fullUrl);
+    showToast(`📋 Đã copy: /${slug}`);
+  };
+
+  const toggleGroup = (netName) => {
+    setExpandedGroups(prev => ({ ...prev, [netName]: !prev[netName] }));
+  };
+
   // ==========================================
-  // 4. MEMOIZED DATA CALCULATIONS (TỐI ƯU HIỆU NĂNG)
+  // PHẦN TỐI ƯU HIỆU NĂNG BẰNG USEMEMO
+  // Thay vì load lại mỗi khi gõ phím, giờ nó chỉ tính lại khi có link/click mới
   // ==========================================
   const groupedLinks = useMemo(() => {
-    const filtered = links.filter(l => l.slug.toLowerCase().includes(search.toLowerCase()) || l.original_url.toLowerCase().includes(search.toLowerCase()));
+    const filtered = links.filter(l => 
+      l.slug.toLowerCase().includes(search.toLowerCase()) || 
+      l.original_url.toLowerCase().includes(search.toLowerCase())
+    );
     return filtered.reduce((acc, link) => {
       const netInfo = getNetworkInfo(link.original_url);
-      if (!acc[netInfo.name]) acc[netInfo.name] = { info: netInfo, items: [] };
-      acc[netInfo.name].items.push(link);
+      const netName = netInfo.name;
+      if (!acc[netName]) acc[netName] = { info: netInfo, items: [] };
+      acc[netName].items.push(link);
       return acc;
     }, {});
   }, [links, search]);
@@ -173,73 +140,141 @@ export default function PremiumAdmin() {
     const devs = {};
 
     clickLogs.forEach(log => {
-      // Đếm link
+      // Tính lượt click của từng link
       counts[log.slug] = (counts[log.slug] || 0) + 1;
-      
-      // Đếm Referrer
+
+      // Tính Nguồn Traffic (Referrer)
       let ref = log.referrer || 'Direct (Truy cập thẳng)';
       const lowerRef = ref.toLowerCase();
-      if (lowerRef.includes('facebook')) ref = 'Facebook';
-      else if (lowerRef.includes('tiktok')) ref = 'TikTok';
+      if (lowerRef.includes('facebook.com')) ref = 'Facebook';
+      else if (lowerRef.includes('tiktok.com')) ref = 'TikTok';
+      else if (lowerRef.includes('threads.net')) ref = 'Threads';
       else if (lowerRef.includes('zalo')) ref = 'Zalo';
-      else if (lowerRef.startsWith('http')) { try { ref = new URL(ref).hostname; } catch(e){} }
+      else if (lowerRef.includes('instagram.com')) ref = 'Instagram';
+      else if (lowerRef.includes('youtube.com')) ref = 'YouTube';
+      else if (lowerRef.startsWith('http')) {
+        try { ref = new URL(ref).hostname; } catch(e){}
+      }
       refs[ref] = (refs[ref] || 0) + 1;
 
-      // Đếm thiết bị
+      // Tính thiết bị
       const ua = (log.user_agent || '').toLowerCase();
       let device = 'Khác';
       if (ua.includes('iphone') || ua.includes('ipad')) device = 'iOS (Apple)';
       else if (ua.includes('android')) device = 'Android';
       else if (ua.includes('windows')) device = 'Windows PC';
-      else if (ua.includes('mac')) device = 'MacBook';
+      else if (ua.includes('mac os') || ua.includes('macintosh')) device = 'MacBook';
       devs[device] = (devs[device] || 0) + 1;
     });
 
-    const formattedTopLinks = Object.entries(counts)
-      .map(([slug, count]) => ({ slug, count, network: getNetworkInfo(links.find(l => l.slug === slug)?.original_url).name }))
-      .sort((a, b) => b.count - a.count);
-
     return {
-      topLinks: formattedTopLinks,
+      topLinks: Object.entries(counts)
+        .map(([slug, count]) => {
+          const linkData = links.find(l => l.slug === slug);
+          return { 
+            slug, count, 
+            originalUrl: linkData?.original_url || 'N/A',
+            network: linkData ? getNetworkInfo(linkData.original_url).name : 'Unknown'
+          };
+        }).sort((a, b) => b.count - a.count),
       topReferrers: Object.entries(refs).sort((a, b) => b[1] - a[1]),
       topDevices: Object.entries(devs).sort((a, b) => b[1] - a[1])
     };
   }, [clickLogs, links]);
 
-  // ==========================================
-  // RENDER UI
-  // ==========================================
   return (
-    <div className="flex h-screen overflow-hidden bg-[#0f1115] text-slate-200 font-sans">
-      {toast && <Toast message={toast.message} isError={toast.isError} />}
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', backgroundColor: '#0f1115', color: '#e2e8f0', fontFamily: '"Inter", system-ui, -apple-system, sans-serif' }}>
       
-      <CreateLinkModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onSubmit={handleAddLink} 
-        isSubmitting={isSubmitting} 
-      />
+      {toast && (
+        <div style={{ position: 'fixed', bottom: '20px', right: '20px', background: toast.isError ? '#ef4444' : '#10b981', color: '#fff', padding: '12px 24px', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)', zIndex: 60, fontWeight: '500', animation: 'slideIn 0.3s ease-out' }}>
+          {toast.text}
+        </div>
+      )}
 
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-
-      <main className="flex-1 h-screen overflow-y-auto p-10 box-border">
-        {loading ? (
-          <div className="flex justify-center items-center h-full text-slate-500 text-xl">Đang đồng bộ dữ liệu... ⏳</div>
-        ) : activeTab === 'links' ? (
-          <div className="animate-[fadeIn_0.3s_ease-out]">
-            <header className="flex justify-between items-center mb-10">
+      {/* MODAL TẠO LINK MỚI */}
+      {isModalOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, backdropFilter: 'blur(4px)' }}>
+          <div style={{ background: '#111318', padding: '32px', borderRadius: '16px', border: '1px solid #1f2937', width: '100%', maxWidth: '450px', animation: 'fadeIn 0.2s ease-out' }}>
+            <h2 style={{ margin: '0 0 20px 0', fontSize: '1.4rem', color: '#f8fafc' }}>Tạo Phễu Mồi Mới 🚀</h2>
+            <form onSubmit={handleAddLink} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
-                <h1 className="text-3xl font-bold text-slate-50 mb-2">Chiến dịch Affiliate</h1>
-                <p className="text-slate-400">Theo dõi và quản lý các liên kết chuyển hướng của bạn.</p>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#94a3b8', fontSize: '0.9rem' }}>Link Đích (Affiliate Link)</label>
+                <input 
+                  type="url" 
+                  required
+                  placeholder="https://dinos.click/..." 
+                  value={newUrl}
+                  onChange={(e) => setNewUrl(e.target.value)}
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#1e293b', color: '#f8fafc', boxSizing: 'border-box', outline: 'none' }}
+                />
               </div>
-              <div className="flex items-center gap-5">
-                <div className="bg-gray-800 px-6 py-2 rounded-xl border border-gray-700 flex flex-col items-center">
-                  <span className="text-2xl font-extrabold text-white">{links.length}</span>
-                  <span className="text-xs text-slate-400 uppercase tracking-widest">Tổng Link</span>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#94a3b8', fontSize: '0.9rem' }}>Đuôi Link (Slug) - Để trống sẽ Random</label>
+                <div style={{ display: 'flex', alignItems: 'center', background: '#1e293b', border: '1px solid #374151', borderRadius: '8px', padding: '0 12px' }}>
+                  <span style={{ color: '#64748b' }}>/</span>
+                  <input 
+                    type="text" 
+                    placeholder="vay-tien-nhanh" 
+                    value={customSlug}
+                    onChange={(e) => setCustomSlug(e.target.value.replace(/[^a-zA-Z0-9-]/g, ''))}
+                    style={{ width: '100%', padding: '12px 8px', border: 'none', background: 'transparent', color: '#f8fafc', outline: 'none' }}
+                  />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+                <button type="button" onClick={() => setIsModalOpen(false)} style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid #374151', color: '#cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}>Hủy</button>
+                <button type="submit" disabled={isSubmitting} style={{ flex: 1, padding: '12px', background: isSubmitting ? '#3b82f680' : '#3b82f6', border: 'none', color: '#fff', borderRadius: '8px', cursor: isSubmitting ? 'not-allowed' : 'pointer', fontWeight: '600', transition: 'background 0.2s' }}>
+                  {isSubmitting ? 'Đang tạo...' : 'Tạo Link'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* SIDEBAR */}
+      <aside style={{ width: '260px', borderRight: '1px solid #1f2937', backgroundColor: '#111318', padding: '24px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '40px' }}>
+          <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff' }}>B</div>
+          <span style={{ fontSize: '1.2rem', fontWeight: '700', letterSpacing: '0.5px', color: '#f8fafc' }}>BINHTIENTI</span>
+        </div>
+        
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+          <button onClick={() => setActiveTab('links')} style={{ width: '100%', border: 'none', cursor: 'pointer', padding: '12px 16px', borderRadius: '8px', background: activeTab === 'links' ? '#1f2937' : 'transparent', color: activeTab === 'links' ? '#f8fafc' : '#94a3b8', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '12px', transition: 'all 0.2s' }}>
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+            Quản lý Links
+          </button>
+          <button onClick={() => setActiveTab('stats')} style={{ width: '100%', border: 'none', cursor: 'pointer', padding: '12px 16px', borderRadius: '8px', background: activeTab === 'stats' ? '#1f2937' : 'transparent', color: activeTab === 'stats' ? '#f8fafc' : '#94a3b8', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '12px', transition: 'all 0.2s' }}>
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            Thống kê Traffic
+          </button>
+        </nav>
+      </aside>
+
+      {/* MAIN CONTENT */}
+      <main style={{ flex: 1, height: '100vh', overflowY: 'auto', padding: '40px 50px', boxSizing: 'border-box' }}>
+        
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+            <div style={{ color: '#64748b', fontSize: '1.2rem' }}>Đang đồng bộ dữ liệu hệ thống... ⏳</div>
+          </div>
+        ) : activeTab === 'links' ? (
+          <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+              <div>
+                <h1 style={{ fontSize: '1.8rem', fontWeight: '700', color: '#f8fafc', margin: '0 0 8px 0' }}>Chiến dịch Affiliate</h1>
+                <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.95rem' }}>Theo dõi và quản lý các liên kết chuyển hướng của bạn.</p>
+              </div>
+              <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                <div style={{ background: '#1f2937', padding: '8px 20px', borderRadius: '12px', border: '1px solid #374151', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <span style={{ fontSize: '1.3rem', fontWeight: '800', color: '#fff' }}>{links.length}</span>
+                  <span style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Tổng Link</span>
                 </div>
                 <button 
                   onClick={() => setIsModalOpen(true)}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-transform active:scale-95 shadow-lg shadow-blue-500/20"
+                  style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '14px 24px', borderRadius: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.3)', transition: 'transform 0.1s' }}
+                  onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
+                  onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
                 >
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"></path></svg>
                   Tạo Link Mới
@@ -247,63 +282,79 @@ export default function PremiumAdmin() {
               </div>
             </header>
 
-            <div className="relative max-w-md mb-8">
-              <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-              <input 
-                type="text" placeholder="Tìm kiếm mã hoặc link gốc..." 
-                value={search} onChange={(e) => setSearch(e.target.value)} 
-                className="w-full py-3 pl-11 pr-4 rounded-xl border border-gray-700 bg-[#111318] focus:border-blue-500 outline-none transition-colors text-slate-50" 
-              />
+            <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
+                <svg style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <input 
+                  type="text" 
+                  placeholder="Tìm kiếm mã hoặc link gốc..." 
+                  value={search} 
+                  onChange={(e) => setSearch(e.target.value)} 
+                  style={{ width: '100%', padding: '12px 16px 12px 44px', borderRadius: '10px', border: '1px solid #374151', background: '#111318', color: '#f8fafc', fontSize: '0.95rem', outline: 'none', transition: 'all 0.2s', boxSizing: 'border-box' }} 
+                />
+              </div>
             </div>
 
-            <div className="bg-[#111318] rounded-2xl border border-gray-800 overflow-hidden shadow-sm">
-              <table className="w-full text-left border-collapse">
+            <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', whiteSpace: 'nowrap' }}>
                 <thead>
-                  <tr className="bg-[#181b23] border-b border-gray-800">
-                    <th className="p-5 text-sm font-semibold text-slate-400 uppercase tracking-wider">Mã Rút Gọn</th>
-                    <th className="p-5 text-sm font-semibold text-slate-400 uppercase tracking-wider">Link Gốc</th>
-                    <th className="p-5 text-sm font-semibold text-slate-400 uppercase tracking-wider">Ngày Lên Camp</th>
-                    <th className="p-5 text-sm font-semibold text-slate-400 uppercase tracking-wider text-right">Thao tác</th>
+                  <tr style={{ background: '#181b23', borderBottom: '1px solid #1f2937' }}>
+                    <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Mã Rút Gọn</th>
+                    <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Link Gốc & Tín Hiệu</th>
+                    <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ngày Lên Camp</th>
+                    <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right' }}>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
                   {Object.keys(groupedLinks).length === 0 ? (
-                    <tr><td colSpan="4" className="p-10 text-center text-slate-500">Không tìm thấy chiến dịch nào.</td></tr>
+                    <tr><td colSpan="4" style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Không tìm thấy chiến dịch nào. Hãy tạo phễu mới.</td></tr>
                   ) : (
                     Object.entries(groupedLinks).map(([netName, group]) => {
                       const isExpanded = search !== '' || expandedGroups[netName] !== false;
                       return (
                         <React.Fragment key={netName}>
-                          <tr onClick={() => setExpandedGroups(p => ({...p, [netName]: !p[netName]}))} className="bg-slate-800/50 border-b border-gray-700 cursor-pointer hover:bg-slate-800 transition">
-                            <td colSpan="4" className="p-4 font-bold text-slate-200">
-                              <div className="flex items-center justify-between">
-                                <span className="flex items-center gap-2">
-                                  <span className={`w-2.5 h-2.5 rounded-full ${group.info.colorClass}`}></span>
-                                  {netName.toUpperCase()} <span className="text-sm font-medium text-slate-400 ml-2">({group.items.length} link)</span>
+                          <tr onClick={() => toggleGroup(netName)} style={{ background: '#1e293b', borderBottom: '1px solid #334155', cursor: 'pointer', transition: 'background 0.2s', userSelect: 'none' }}>
+                            <td colSpan="4" style={{ padding: '12px 24px', fontWeight: '700', color: group.info.text }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                  <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: group.info.text }}></span>
+                                  Nền tảng: {netName.toUpperCase()} <span style={{ color: '#94a3b8', fontSize: '0.85rem', fontWeight: '500', marginLeft: '6px' }}>({group.items.length} link)</span>
                                 </span>
-                                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className={`text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+                                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ color: '#94a3b8', transition: 'transform 0.3s ease', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"></path></svg>
                               </div>
                             </td>
                           </tr>
-                          {isExpanded && group.items.map((l) => (
-                            <tr key={l.id} className="border-b border-gray-800 hover:bg-gray-800/30 transition-colors">
-                              <td className="p-5 flex items-center gap-2">
-                                <span className="text-slate-500">/</span>
-                                <strong className="text-slate-50 tracking-wide">{l.slug}</strong>
-                              </td>
-                              <td className="p-5 max-w-[350px]">
-                                <div className="truncate text-slate-300 text-sm" title={l.original_url}>{l.original_url}</div>
-                              </td>
-                              <td className="p-5 text-slate-400 text-sm">{new Date(l.created_at).toLocaleDateString('vi-VN')}</td>
-                              <td className="p-5 text-right">
-                                <div className="flex gap-2 justify-end">
-                                  <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/${l.slug}`); showToast(`📋 Đã copy: /${l.slug}`); }} className="p-2 bg-gray-700 text-slate-300 rounded-lg hover:bg-gray-600 transition"><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>
-                                  <a href={l.original_url} target="_blank" rel="noopener noreferrer" className="p-2 bg-gray-700 text-slate-300 rounded-lg hover:bg-gray-600 transition"><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
-                                  <button onClick={() => handleDelete(l.slug)} className="p-2 bg-gray-700 text-red-400 rounded-lg hover:bg-red-500/20 transition"><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
+                          
+                          {isExpanded && group.items.map((l) => {
+                            const lastClick = getLastClickInfo(l.slug);
+                            return (
+                              <tr key={l.id} style={{ borderBottom: '1px solid #1f2937', transition: 'background 0.15s' }} onMouseEnter={(e) => e.currentTarget.style.background = '#181b23'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                                <td style={{ padding: '16px 24px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ color: '#64748b' }}>/</span>
+                                    <strong style={{ color: '#f8fafc', letterSpacing: '0.5px' }}>{l.slug}</strong>
+                                  </div>
+                                </td>
+                                <td style={{ padding: '16px 24px', maxWidth: '350px' }}>
+                                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', color: '#cbd5e1', fontSize: '0.9rem', marginBottom: '4px' }} title={l.original_url}>{l.original_url}</div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: '500', color: lastClick.color }}>
+                                    {lastClick.isDead ? <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444', animation: 'pulse 2s infinite' }}></span> : null}
+                                    {lastClick.text}
+                                  </div>
+                                </td>
+                                <td style={{ padding: '16px 24px', color: '#94a3b8', fontSize: '0.9rem' }}>
+                                  {new Date(l.created_at).toLocaleDateString('vi-VN')}
+                                </td>
+                                <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                    <button onClick={() => handleCopy(l.slug)} title="Copy" style={{ background: '#374151', color: '#d1d5db', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>
+                                    <a href={l.original_url} target="_blank" rel="noopener noreferrer" title="Mở Link" style={{ background: '#374151', color: '#d1d5db', border: 'none', padding: '8px', borderRadius: '8px', display: 'flex' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
+                                    <button onClick={() => handleDelete(l.slug)} title="Xóa" style={{ background: '#374151', color: '#fca5a5', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </React.Fragment>
                       );
                     })
@@ -313,54 +364,99 @@ export default function PremiumAdmin() {
             </div>
           </div>
         ) : (
-          <div className="animate-[fadeIn_0.3s_ease-out]">
-            <header className="mb-10">
-              <h1 className="text-3xl font-bold text-slate-50 mb-2">Báo Cáo Hiệu Suất</h1>
-              <p className="text-slate-400">Theo dõi traffic đẩy từ các nền tảng vào phễu.</p>
+          /* TAB THỐNG KÊ TRAFFIC */
+          <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+            <header style={{ marginBottom: '40px' }}>
+              <h1 style={{ fontSize: '1.8rem', fontWeight: '700', color: '#f8fafc', margin: '0 0 8px 0' }}>Báo Cáo Hiệu Suất</h1>
+              <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.95rem' }}>Theo dõi traffic đẩy từ các nền tảng vào phễu.</p>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div className="bg-[#111318] p-6 rounded-2xl border border-gray-800 shadow-sm">
-                <div className="text-slate-400 text-sm uppercase tracking-wider font-semibold mb-2">Tổng số Click (All-time)</div>
-                <div className="text-4xl font-extrabold text-emerald-500">{clickLogs.length}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+              <div style={{ background: '#111318', padding: '24px', borderRadius: '16px', border: '1px solid #1f2937', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                <div style={{ color: '#94a3b8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: '600' }}>Tổng số Click (All-time)</div>
+                <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#10b981' }}>{clickLogs.length}</div>
               </div>
-              <div className="bg-[#111318] p-6 rounded-2xl border border-gray-800 shadow-sm">
-                <div className="text-slate-400 text-sm uppercase tracking-wider font-semibold mb-2">Link Đang Cắn Khỏe Nhất</div>
-                <div className="text-2xl font-bold text-blue-400 mb-1">/{topLinks[0]?.slug || 'Chưa có'}</div>
-                <div className="text-slate-300 text-sm">{topLinks[0]?.count || 0} lượt bấm</div>
+              <div style={{ background: '#111318', padding: '24px', borderRadius: '16px', border: '1px solid #1f2937', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                <div style={{ color: '#94a3b8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: '600' }}>Link Đang Cắn Khỏe Nhất</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#60a5fa', marginBottom: '4px' }}>/{topLinks[0]?.slug || 'Chưa có'}</div>
+                <div style={{ color: '#cbd5e1', fontSize: '0.9rem' }}>{topLinks[0]?.count || 0} lượt bấm</div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <div className="bg-[#111318] p-6 rounded-2xl border border-gray-800">
-                <h3 className="text-lg font-bold text-slate-50 mb-6">🌐 Nguồn Traffic Đổ Về</h3>
-                {topReferrers.map(([name, count], index) => {
-                  const percent = Math.round((count / clickLogs.length) * 100) || 0;
-                  return (
-                    <div key={name} className="mb-4">
-                      <div className="flex justify-between text-sm mb-2"><span className="text-slate-300 font-medium">{name}</span><span className="text-slate-400">{count} click ({percent}%)</span></div>
-                      <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden"><div style={{width: `${percent}%`}} className={`h-full rounded-full ${index === 0 ? 'bg-blue-500' : 'bg-indigo-500'}`}></div></div>
-                    </div>
-                  )
-                })}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
+              <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', padding: '24px' }}>
+                <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#f8fafc' }}>🌐 Nguồn Traffic Đổ Về</h3>
+                {topReferrers.length === 0 ? <p style={{ color: '#64748b' }}>Chưa có dữ liệu</p> : 
+                  topReferrers.map(([name, count], index) => {
+                    const percent = Math.round((count / clickLogs.length) * 100);
+                    return (
+                      <div key={name} style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#cbd5e1', fontWeight: '500' }}>{name}</span>
+                          <span style={{ color: '#94a3b8' }}>{count} click ({percent}%)</span>
+                        </div>
+                        <div style={{ width: '100%', height: '8px', background: '#1e293b', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div style={{ width: `${percent}%`, height: '100%', background: index === 0 ? '#3b82f6' : '#6366f1', borderRadius: '4px', transition: 'width 1s ease-out' }}></div>
+                        </div>
+                      </div>
+                    )
+                  })
+                }
               </div>
 
-              <div className="bg-[#111318] p-6 rounded-2xl border border-gray-800">
-                <h3 className="text-lg font-bold text-slate-50 mb-6">📱 Tỷ lệ Thiết bị</h3>
-                {topDevices.map(([name, count], index) => {
-                  const percent = Math.round((count / clickLogs.length) * 100) || 0;
-                  return (
-                    <div key={name} className="mb-4">
-                      <div className="flex justify-between text-sm mb-2"><span className="text-slate-300 font-medium">{name}</span><span className="text-slate-400">{count} click ({percent}%)</span></div>
-                      <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden"><div style={{width: `${percent}%`}} className={`h-full rounded-full ${index === 0 ? 'bg-emerald-500' : 'bg-green-400'}`}></div></div>
-                    </div>
-                  )
-                })}
+              <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', padding: '24px' }}>
+                <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#f8fafc' }}>📱 Tỷ lệ Thiết bị</h3>
+                {topDevices.length === 0 ? <p style={{ color: '#64748b' }}>Chưa có dữ liệu</p> : 
+                  topDevices.map(([name, count], index) => {
+                    const percent = Math.round((count / clickLogs.length) * 100);
+                    return (
+                      <div key={name} style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#cbd5e1', fontWeight: '500' }}>{name}</span>
+                          <span style={{ color: '#94a3b8' }}>{count} click ({percent}%)</span>
+                        </div>
+                        <div style={{ width: '100%', height: '8px', background: '#1e293b', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div style={{ width: `${percent}%`, height: '100%', background: index === 0 ? '#10b981' : '#34d399', borderRadius: '4px', transition: 'width 1s ease-out' }}></div>
+                        </div>
+                      </div>
+                    )
+                  })
+                }
               </div>
+            </div>
+
+            <div style={{ background: '#111318', borderRadius: '16px', border: '1px solid #1f2937', padding: '24px' }}>
+              <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#f8fafc' }}>🔥 Bảng Xếp Hạng Camp</h3>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #1f2937', color: '#94a3b8', fontSize: '0.85rem' }}>
+                    <th style={{ paddingBottom: '12px', fontWeight: '600' }}>TOP</th>
+                    <th style={{ paddingBottom: '12px', fontWeight: '600' }}>Mã Rút Gọn</th>
+                    <th style={{ paddingBottom: '12px', fontWeight: '600' }}>Nền Tảng</th>
+                    <th style={{ paddingBottom: '12px', fontWeight: '600', textAlign: 'right' }}>Tổng Click</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topLinks.map((link, idx) => (
+                    <tr key={link.slug} style={{ borderBottom: '1px solid #1e293b' }}>
+                      <td style={{ padding: '16px 0', color: idx === 0 ? '#fbbf24' : idx === 1 ? '#94a3b8' : idx === 2 ? '#b45309' : '#64748b', fontWeight: 'bold' }}>#{idx + 1}</td>
+                      <td style={{ padding: '16px 0', color: '#f8fafc', fontWeight: '500' }}>/{link.slug}</td>
+                      <td style={{ padding: '16px 0', color: '#94a3b8', fontSize: '0.9rem' }}>{link.network}</td>
+                      <td style={{ padding: '16px 0', color: '#10b981', fontWeight: '700', textAlign: 'right' }}>{link.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
       </main>
+
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+      `}} />
     </div>
   );
 }
