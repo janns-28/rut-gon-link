@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 
-// Tối ưu hóa nhận diện các network phổ biến - GIỮ Y NGUYÊN MÃ MÀU GỐC CỦA MÀI
+// Tối ưu hóa nhận diện các network phổ biến - GIỮ NGUYÊN MÃ MÀU GỐC
 const getNetworkInfo = (url) => {
   const lowerUrl = url?.toLowerCase() || '';
   if (lowerUrl.includes('dinos.click')) return { name: 'Dinos', bg: '#fee2e2', text: '#dc2626', border: '#fca5a5' };
@@ -14,20 +14,22 @@ const getNetworkInfo = (url) => {
 };
 
 export default function PremiumAdmin() {
+  // --- STATE CỦA MÀI ---
   const [links, setLinks] = useState([]);
   const [clickLogs, setClickLogs] = useState([]);
-  const [totalClicks, setTotalClicks] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState('');
   const [expandedGroups, setExpandedGroups] = useState({});
   const [activeTab, setActiveTab] = useState('links');
 
-  // State cho Modal tạo link
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newUrl, setNewUrl] = useState('');
   const [customSlug, setCustomSlug] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // --- STATE THÊM VÀO ---
+  const [totalClicks, setTotalClicks] = useState(0); 
 
   useEffect(() => {
     fetchData();
@@ -35,12 +37,15 @@ export default function PremiumAdmin() {
     return () => { if (cleanupRealtime) cleanupRealtime(); };
   }, []);
 
+  // --- CHỨC NĂNG: FETCH DATA (CÓ TỐI ƯU 30 NGÀY) ---
   async function fetchData() {
     setLoading(true);
     try {
+      // Đếm tổng click All-time
       const { count } = await supabase.from('click_logs').select('*', { count: 'exact', head: true });
       if (count !== null) setTotalClicks(count);
 
+      // Chỉ lấy 30 ngày gần nhất để web không bị nặng
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -58,6 +63,7 @@ export default function PremiumAdmin() {
     }
   }
 
+  // --- CHỨC NĂNG: REALTIME (TỰ NHẢY SỐ KHÔNG CẦN F5) ---
   function setupRealtime() {
     const channel = supabase.channel('custom-all-channel')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'click_logs' }, (payload) => {
@@ -68,6 +74,7 @@ export default function PremiumAdmin() {
     return () => supabase.removeChannel(channel);
   }
 
+  // --- CHỨC NĂNG CỦA MÀI (GIỮ NGUYÊN 100%) ---
   const showToast = (msg, isError = false) => {
     setToast({ text: msg, isError });
     setTimeout(() => setToast(''), 3000);
@@ -76,14 +83,11 @@ export default function PremiumAdmin() {
   const handleAddLink = async (e) => {
     e.preventDefault();
     if (!newUrl) return showToast('❌ Quên nhập link gốc rồi kìa!', true);
-
     setIsSubmitting(true);
     const finalSlug = customSlug.trim() || Math.random().toString(36).substring(2, 8);
-
     try {
       const { data, error } = await supabase.from('links').insert([{ slug: finalSlug, original_url: newUrl }]).select();
       if (error) throw error;
-
       setLinks([data[0], ...links]);
       showToast(`✅ Lên camp thành công: /${finalSlug}`);
       setIsModalOpen(false);
@@ -99,11 +103,8 @@ export default function PremiumAdmin() {
   const getLastClickInfo = (slug) => {
     const logs = clickLogs.filter(log => log.slug === slug);
     if (logs.length === 0) return { text: 'Chưa có click', color: '#64748b', isDead: false };
-    
     logs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    const lastLogTime = new Date(logs[0].created_at);
-    const diffHours = (new Date() - lastLogTime) / (1000 * 60 * 60);
-
+    const diffHours = (new Date() - new Date(logs[0].created_at)) / (1000 * 60 * 60);
     if (diffHours < 1) return { text: 'Vừa cắn số 🔥', color: '#10b981', isDead: false };
     if (diffHours < 3) return { text: `Tầm ${Math.floor(diffHours)}h trước`, color: '#fbbf24', isDead: false };
     return { text: `Đứng im >${Math.floor(diffHours)}h ⚠️`, color: '#ef4444', isDead: true };
@@ -112,14 +113,12 @@ export default function PremiumAdmin() {
   const handleDelete = async (slug) => {
     const confirm = window.confirm(`Cảnh báo: Xóa vĩnh viễn phễu /${slug}? (Click logs vẫn sẽ được giữ lại để check đối soát)`);
     if (!confirm) return;
-    
     const previousLinks = [...links];
     setLinks(links.filter(l => l.slug !== slug));
-    
     try {
       const res = await fetch('/api/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slug }) });
       if (!res.ok) throw new Error('Lỗi Server');
-      showToast(`🗑️ Đã dọn dẹp /${slug} thành thành công!`);
+      showToast(`🗑️ Đã dọn dẹp /${slug} thành công!`);
     } catch (error) {
       setLinks(previousLinks);
       showToast(`❌ Lỗi không xóa được! Vui lòng thử lại.`, true);
@@ -127,8 +126,7 @@ export default function PremiumAdmin() {
   };
 
   const handleCopy = (slug) => {
-    const fullUrl = `${window.location.origin}/${slug}`;
-    navigator.clipboard.writeText(fullUrl);
+    navigator.clipboard.writeText(`${window.location.origin}/${slug}`);
     showToast(`📋 Đã copy: /${slug}`);
   };
 
@@ -140,19 +138,16 @@ export default function PremiumAdmin() {
     const filtered = links.filter(l => l.slug.toLowerCase().includes(search.toLowerCase()) || l.original_url.toLowerCase().includes(search.toLowerCase()));
     return filtered.reduce((acc, link) => {
       const netInfo = getNetworkInfo(link.original_url);
-      const netName = netInfo.name;
-      if (!acc[netName]) acc[netName] = { info: netInfo, items: [] };
-      acc[netName].items.push(link);
+      if (!acc[netInfo.name]) acc[netInfo.name] = { info: netInfo, items: [] };
+      acc[netInfo.name].items.push(link);
       return acc;
     }, {});
   }, [links, search]);
 
   const { topLinks, topReferrers, topDevices } = useMemo(() => {
     const counts = {}; const refs = {}; const devs = {};
-
     clickLogs.forEach(log => {
       counts[log.slug] = (counts[log.slug] || 0) + 1;
-
       let ref = log.referrer || 'Direct (Truy cập thẳng)';
       const lowerRef = ref.toLowerCase();
       if (lowerRef.includes('facebook.com')) ref = 'Facebook';
@@ -163,7 +158,6 @@ export default function PremiumAdmin() {
       else if (lowerRef.includes('youtube.com')) ref = 'YouTube';
       else if (lowerRef.startsWith('http')) { try { ref = new URL(ref).hostname; } catch(e){} }
       refs[ref] = (refs[ref] || 0) + 1;
-
       const ua = (log.user_agent || '').toLowerCase();
       let device = 'Khác';
       if (ua.includes('iphone') || ua.includes('ipad')) device = 'iOS (Apple)';
@@ -172,7 +166,6 @@ export default function PremiumAdmin() {
       else if (ua.includes('mac os') || ua.includes('macintosh')) device = 'MacBook';
       devs[device] = (devs[device] || 0) + 1;
     });
-
     return {
       topLinks: Object.entries(counts).map(([slug, count]) => {
           const linkData = links.find(l => l.slug === slug);
@@ -183,41 +176,39 @@ export default function PremiumAdmin() {
     };
   }, [clickLogs, links]);
 
+  // --- GIAO DIỆN (SỬ DỤNG CLASS TAILWIND NHƯNG MÀU/BỐ CỤC GỐC) ---
   return (
     <div className="flex h-screen overflow-hidden bg-[#0f1115] text-[#e2e8f0] font-sans">
       
+      {/* TOAST */}
       {toast && (
-        <div className={`fixed bottom-5 right-5 px-6 py-3 rounded-lg shadow-xl z-50 font-medium text-white transition-all duration-300 ${toast.isError ? 'bg-[#ef4444]' : 'bg-[#10b981]'}`}>
+        <div className={`fixed bottom-5 right-5 px-6 py-3 rounded-lg shadow-xl z-[60] font-medium text-white toast-animation ${toast.isError ? 'bg-[#ef4444]' : 'bg-[#10b981]'}`}>
           {toast.text}
         </div>
       )}
 
-      {/* MODAL TẠO LINK MỚI */}
+      {/* MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-[4px]">
-          <div className="bg-[#111318] p-8 rounded-2xl border border-[#1f2937] w-full max-w-[450px]">
+          <div className="bg-[#111318] p-8 rounded-2xl border border-[#1f2937] w-full max-w-[450px] modal-animation">
             <h2 className="m-0 mb-5 text-[1.4rem] text-[#f8fafc]">Tạo Phễu Mồi Mới 🚀</h2>
             <form onSubmit={handleAddLink} className="flex flex-col gap-4">
               <div>
                 <label className="block mb-2 text-[#94a3b8] text-[0.9rem]">Link Đích (Affiliate Link)</label>
-                <input 
-                  type="url" required placeholder="https://dinos.click/..." value={newUrl} onChange={(e) => setNewUrl(e.target.value)}
-                  className="w-full p-3 rounded-lg border border-[#374151] bg-[#1e293b] text-[#f8fafc] box-border outline-none"
-                />
+                <input type="url" required placeholder="https://dinos.click/..." value={newUrl} onChange={(e) => setNewUrl(e.target.value)}
+                  className="w-full p-3 rounded-lg border border-[#374151] bg-[#1e293b] text-[#f8fafc] outline-none" />
               </div>
               <div>
                 <label className="block mb-2 text-[#94a3b8] text-[0.9rem]">Đuôi Link (Slug) - Để trống sẽ Random</label>
                 <div className="flex items-center bg-[#1e293b] border border-[#374151] rounded-lg px-3">
                   <span className="text-[#64748b]">/</span>
-                  <input 
-                    type="text" placeholder="vay-tien-nhanh" value={customSlug} onChange={(e) => setCustomSlug(e.target.value.replace(/[^a-zA-Z0-9-]/g, ''))}
-                    className="w-full p-3 py-3 px-2 border-none bg-transparent text-[#f8fafc] outline-none"
-                  />
+                  <input type="text" placeholder="vay-tien-nhanh" value={customSlug} onChange={(e) => setCustomSlug(e.target.value.replace(/[^a-zA-Z0-9-]/g, ''))}
+                    className="w-full py-3 px-2 border-none bg-transparent text-[#f8fafc] outline-none" />
                 </div>
               </div>
               <div className="flex gap-3 mt-2.5">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 p-3 bg-transparent border border-[#374151] text-[#cbd5e1] rounded-lg cursor-pointer font-semibold">Hủy</button>
-                <button type="submit" disabled={isSubmitting} className="flex-1 p-3 border-none text-white rounded-lg cursor-pointer font-semibold transition-colors duration-200" style={{ background: isSubmitting ? '#3b82f680' : '#3b82f6' }}>
+                <button type="submit" disabled={isSubmitting} className="flex-1 p-3 border-none text-white rounded-lg cursor-pointer font-semibold transition-colors" style={{ background: isSubmitting ? '#3b82f680' : '#3b82f6' }}>
                   {isSubmitting ? 'Đang tạo...' : 'Tạo Link'}
                 </button>
               </div>
@@ -232,28 +223,24 @@ export default function PremiumAdmin() {
           <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white bg-gradient-to-br from-[#3b82f6] to-[#8b5cf6]">B</div>
           <span className="text-[1.2rem] font-bold tracking-[0.5px] text-[#f8fafc]">BINHTIENTI</span>
         </div>
-        
         <nav className="flex flex-col gap-2 flex-1">
-          <button onClick={() => setActiveTab('links')} className={`w-full border-none cursor-pointer p-3 px-4 rounded-lg font-medium flex items-center gap-3 transition-all duration-200 ${activeTab === 'links' ? 'bg-[#1f2937] text-[#f8fafc]' : 'bg-transparent text-[#94a3b8]'}`}>
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-            Quản lý Links
+          <button onClick={() => setActiveTab('links')} className={`w-full border-none cursor-pointer p-3 px-4 rounded-lg font-medium flex items-center gap-3 transition-colors ${activeTab === 'links' ? 'bg-[#1f2937] text-[#f8fafc]' : 'bg-transparent text-[#94a3b8]'}`}>
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg> Quản lý Links
           </button>
-          <button onClick={() => setActiveTab('stats')} className={`w-full border-none cursor-pointer p-3 px-4 rounded-lg font-medium flex items-center gap-3 transition-all duration-200 ${activeTab === 'stats' ? 'bg-[#1f2937] text-[#f8fafc]' : 'bg-transparent text-[#94a3b8]'}`}>
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-            Thống kê Traffic
+          <button onClick={() => setActiveTab('stats')} className={`w-full border-none cursor-pointer p-3 px-4 rounded-lg font-medium flex items-center gap-3 transition-colors ${activeTab === 'stats' ? 'bg-[#1f2937] text-[#f8fafc]' : 'bg-transparent text-[#94a3b8]'}`}>
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg> Thống kê Traffic
           </button>
         </nav>
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 h-screen overflow-y-auto px-[50px] py-[40px] box-border">
-        
+      <main className="flex-1 h-screen overflow-y-auto px-[50px] py-[40px]">
         {loading ? (
           <div className="flex justify-center items-center h-full">
             <div className="text-[#64748b] text-[1.2rem]">Đang đồng bộ dữ liệu hệ thống... ⏳</div>
           </div>
         ) : activeTab === 'links' ? (
-          <div>
+          <div className="fade-animation">
             <header className="flex justify-between items-center mb-10">
               <div>
                 <h1 className="text-[1.8rem] font-bold text-[#f8fafc] m-0 mb-2">Chiến dịch Affiliate</h1>
@@ -264,12 +251,8 @@ export default function PremiumAdmin() {
                   <span className="text-[1.3rem] font-extrabold text-white">{links.length}</span>
                   <span className="text-[0.7rem] text-[#94a3b8] uppercase tracking-[1px]">Tổng Link</span>
                 </div>
-                <button 
-                  onClick={() => setIsModalOpen(true)}
-                  className="bg-[#3b82f6] text-white border-none py-[14px] px-6 rounded-xl font-semibold flex items-center gap-2 cursor-pointer shadow-[0_4px_6px_-1px_rgba(59,130,246,0.3)] transition-transform duration-100 active:scale-95"
-                >
-                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"></path></svg>
-                  Tạo Link Mới
+                <button onClick={() => setIsModalOpen(true)} className="bg-[#3b82f6] text-white border-none py-[14px] px-6 rounded-xl font-semibold flex items-center gap-2 cursor-pointer shadow-md active:scale-95 transition-transform">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"></path></svg> Tạo Link Mới
                 </button>
               </div>
             </header>
@@ -277,14 +260,12 @@ export default function PremiumAdmin() {
             <div className="flex gap-4 mb-6">
               <div className="relative flex-1 max-w-[400px]">
                 <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748b]" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                <input 
-                  type="text" placeholder="Tìm kiếm mã hoặc link gốc..." value={search} onChange={(e) => setSearch(e.target.value)} 
-                  className="w-full py-3 pr-4 pl-11 rounded-lg border border-[#374151] bg-[#111318] text-[#f8fafc] text-[0.95rem] outline-none transition-all duration-200 box-border" 
-                />
+                <input type="text" placeholder="Tìm kiếm mã hoặc link gốc..." value={search} onChange={(e) => setSearch(e.target.value)} 
+                  className="w-full py-3 pr-4 pl-11 rounded-lg border border-[#374151] bg-[#111318] text-[#f8fafc] text-[0.95rem] outline-none" />
               </div>
             </div>
 
-            <div className="bg-[#111318] rounded-2xl border border-[#1f2937] overflow-hidden shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)]">
+            <div className="bg-[#111318] rounded-2xl border border-[#1f2937] overflow-hidden shadow-sm">
               <table className="w-full border-collapse text-left whitespace-nowrap">
                 <thead>
                   <tr className="bg-[#181b23] border-b border-[#1f2937]">
@@ -302,44 +283,40 @@ export default function PremiumAdmin() {
                       const isExpanded = search !== '' || expandedGroups[netName] !== false;
                       return (
                         <React.Fragment key={netName}>
-                          <tr onClick={() => toggleGroup(netName)} className="bg-[#1e293b] border-b border-[#334155] cursor-pointer transition-colors duration-200 select-none">
+                          <tr onClick={() => toggleGroup(netName)} className="bg-[#1e293b] border-b border-[#334155] cursor-pointer select-none">
                             <td colSpan="4" className="p-3 px-6 font-bold" style={{ color: group.info.text }}>
                               <div className="flex items-center justify-between">
-                                <span className="inline-flex items-center gap-2">
-                                  <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: group.info.text }}></span>
+                                <span className="flex items-center gap-2">
+                                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: group.info.text }}></span>
                                   Nền tảng: {netName.toUpperCase()} <span className="text-[#94a3b8] text-[0.85rem] font-medium ml-1.5">({group.items.length} link)</span>
                                 </span>
                                 <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className={`text-[#94a3b8] transition-transform duration-300 ${isExpanded ? 'rotate-180' : 'rotate-0'}`}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"></path></svg>
                               </div>
                             </td>
                           </tr>
-                          
                           {isExpanded && group.items.map((l) => {
                             const lastClick = getLastClickInfo(l.slug);
                             return (
-                              <tr key={l.id} className="border-b border-[#1f2937] transition-colors duration-150 hover:bg-[#181b23]">
+                              <tr key={l.id} className="border-b border-[#1f2937] hover:bg-[#181b23] transition-colors">
                                 <td className="p-4 px-6">
                                   <div className="flex items-center gap-2">
-                                    <span className="text-[#64748b]">/</span>
-                                    <strong className="text-[#f8fafc] tracking-[0.5px]">{l.slug}</strong>
+                                    <span className="text-[#64748b]">/</span><strong className="text-[#f8fafc] tracking-[0.5px]">{l.slug}</strong>
                                   </div>
                                 </td>
                                 <td className="p-4 px-6 max-w-[350px]">
                                   <div className="overflow-hidden text-ellipsis text-[#cbd5e1] text-[0.9rem] mb-1" title={l.original_url}>{l.original_url}</div>
                                   <div className="flex items-center gap-1.5 text-[0.8rem] font-medium" style={{ color: lastClick.color }}>
-                                    {lastClick.isDead ? <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#ef4444] animate-pulse"></span> : null}
+                                    {lastClick.isDead ? <span className="w-1.5 h-1.5 rounded-full bg-[#ef4444] custom-pulse"></span> : null}
                                     {lastClick.text}
                                   </div>
                                 </td>
-                                <td className="p-4 px-6 text-[#94a3b8] text-[0.9rem]">
-                                  {new Date(l.created_at).toLocaleDateString('vi-VN')}
-                                </td>
+                                <td className="p-4 px-6 text-[#94a3b8] text-[0.9rem]">{new Date(l.created_at).toLocaleDateString('vi-VN')}</td>
                                 <td className="p-4 px-6 text-right">
-                                  {/* CÁC NÚT ĐƯỢC GIỮ NGUYÊN Y CHANG BẢN GỐC CỦA MÀI, KHÔNG BỊ TÀNG HÌNH HAY GIẤU ĐI */}
+                                  {/* CÁC NÚT ĐƯỢC GIỮ NGUYÊN Y CHANG BẢN GỐC (LUÔN HIỆN) */}
                                   <div className="flex gap-2 justify-end">
-                                    <button onClick={() => handleCopy(l.slug)} title="Copy" className="bg-[#374151] text-[#d1d5db] border-none p-2 rounded-lg cursor-pointer"><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>
-                                    <a href={l.original_url} target="_blank" rel="noopener noreferrer" title="Mở Link" className="bg-[#374151] text-[#d1d5db] border-none p-2 rounded-lg flex"><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
-                                    <button onClick={() => handleDelete(l.slug)} title="Xóa" className="bg-[#374151] text-[#fca5a5] border-none p-2 rounded-lg cursor-pointer"><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                    <button onClick={() => handleCopy(l.slug)} title="Copy" className="bg-[#374151] text-[#d1d5db] border-none p-2 rounded-lg cursor-pointer hover:opacity-80"><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>
+                                    <a href={l.original_url} target="_blank" rel="noopener noreferrer" title="Mở Link" className="bg-[#374151] text-[#d1d5db] border-none p-2 rounded-lg flex hover:opacity-80"><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
+                                    <button onClick={() => handleDelete(l.slug)} title="Xóa" className="bg-[#374151] text-[#fca5a5] border-none p-2 rounded-lg cursor-pointer hover:opacity-80"><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                                   </div>
                                 </td>
                               </tr>
@@ -354,19 +331,18 @@ export default function PremiumAdmin() {
             </div>
           </div>
         ) : (
-          /* TAB THỐNG KÊ TRAFFIC CỦA MÀI CHUẨN GỐC */
-          <div>
+          <div className="fade-animation">
             <header className="mb-10">
               <h1 className="text-[1.8rem] font-bold text-[#f8fafc] m-0 mb-2">Báo Cáo Hiệu Suất</h1>
               <p className="text-[#94a3b8] m-0 text-[0.95rem]">Theo dõi traffic đẩy từ các nền tảng vào phễu.</p>
             </header>
 
             <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-5 mb-[30px]">
-              <div className="bg-[#111318] p-6 rounded-2xl border border-[#1f2937] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)]">
+              <div className="bg-[#111318] p-6 rounded-2xl border border-[#1f2937] shadow-sm">
                 <div className="text-[#94a3b8] text-[0.85rem] uppercase tracking-[1px] mb-2 font-semibold">Tổng số Click (All-time)</div>
-                <div className="text-[2.5rem] font-extrabold text-[#10b981]">{totalClicks}</div>
+                <div className="text-[2.5rem] font-extrabold text-[#10b981]">{totalClicks.toLocaleString()}</div>
               </div>
-              <div className="bg-[#111318] p-6 rounded-2xl border border-[#1f2937] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)]">
+              <div className="bg-[#111318] p-6 rounded-2xl border border-[#1f2937] shadow-sm">
                 <div className="text-[#94a3b8] text-[0.85rem] uppercase tracking-[1px] mb-2 font-semibold">Link Đang Cắn Khỏe Nhất</div>
                 <div className="text-[1.5rem] font-bold text-[#60a5fa] mb-1">/{topLinks[0]?.slug || 'Chưa có'}</div>
                 <div className="text-[#cbd5e1] text-[0.9rem]">{topLinks[0]?.count || 0} lượt bấm</div>
@@ -381,12 +357,12 @@ export default function PremiumAdmin() {
                     const percent = Math.round((count / clickLogs.length) * 100);
                     return (
                       <div key={name} className="mb-4">
-                        <div className="flex justify-between mb-[6px] text-[0.9rem]">
+                        <div className="flex justify-between mb-1.5 text-[0.9rem]">
                           <span className="text-[#cbd5e1] font-medium">{name}</span>
                           <span className="text-[#94a3b8]">{count} click ({percent}%)</span>
                         </div>
                         <div className="w-full h-2 bg-[#1e293b] rounded-md overflow-hidden">
-                          <div className="h-full rounded-md transition-[width] duration-1000 ease-out" style={{ width: `${percent}%`, backgroundColor: index === 0 ? '#3b82f6' : '#6366f1' }}></div>
+                          <div className="h-full rounded-md transition-all duration-1000 ease-out" style={{ width: `${percent}%`, backgroundColor: index === 0 ? '#3b82f6' : '#6366f1' }}></div>
                         </div>
                       </div>
                     )
@@ -401,12 +377,12 @@ export default function PremiumAdmin() {
                     const percent = Math.round((count / clickLogs.length) * 100);
                     return (
                       <div key={name} className="mb-4">
-                        <div className="flex justify-between mb-[6px] text-[0.9rem]">
+                        <div className="flex justify-between mb-1.5 text-[0.9rem]">
                           <span className="text-[#cbd5e1] font-medium">{name}</span>
                           <span className="text-[#94a3b8]">{count} click ({percent}%)</span>
                         </div>
                         <div className="w-full h-2 bg-[#1e293b] rounded-md overflow-hidden">
-                          <div className="h-full rounded-md transition-[width] duration-1000 ease-out" style={{ width: `${percent}%`, backgroundColor: index === 0 ? '#10b981' : '#34d399' }}></div>
+                          <div className="h-full rounded-md transition-all duration-1000 ease-out" style={{ width: `${percent}%`, backgroundColor: index === 0 ? '#10b981' : '#34d399' }}></div>
                         </div>
                       </div>
                     )
@@ -441,6 +417,17 @@ export default function PremiumAdmin() {
           </div>
         )}
       </main>
+
+      {/* GIỮ LẠI STYLE ANIMATION GỐC ĐỂ KHÔNG BỊ MẤT HIỆU ỨNG */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .fade-animation { animation: fadeIn 0.3s ease-out; }
+        .toast-animation { animation: slideIn 0.3s ease-out; }
+        .modal-animation { animation: fadeIn 0.2s ease-out; }
+        .custom-pulse { animation: customPulse 2s infinite; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes customPulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+      `}} />
     </div>
   );
 }
