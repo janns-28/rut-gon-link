@@ -12,11 +12,9 @@ const getNetwork = (url = '') => {
   return 'Other';
 };
 
-const formatDate = (d) => new Date(d).toLocaleDateString('vi-VN');
-
-// ===== Components =====
-const Card = ({ children }) => (
-  <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur">
+// ===== UI Atoms =====
+const Card = ({ children, className='' }) => (
+  <div className={`bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur shadow-lg ${className}`}>
     {children}
   </div>
 );
@@ -24,9 +22,13 @@ const Card = ({ children }) => (
 const KPI = ({ label, value, sub }) => (
   <Card>
     <div className="text-xs text-gray-400 mb-1">{label}</div>
-    <div className="text-2xl font-bold text-white">{value}</div>
+    <div className="text-3xl font-bold tracking-tight">{value}</div>
     {sub && <div className="text-xs text-gray-400 mt-1">{sub}</div>}
   </Card>
+);
+
+const Badge = ({ children }) => (
+  <span className="px-2 py-1 text-xs rounded bg-white/10 border border-white/10">{children}</span>
 );
 
 // ===== Main =====
@@ -73,7 +75,7 @@ export default function AdminPro() {
   const topLink = [...enrichedLinks].sort((a,b)=>b.clicks-a.clicks)[0];
 
   const insights = useMemo(() => {
-    if (!logs.length) return [];
+    if (!logs.length) return ['Chưa có dữ liệu'];
 
     const res = [];
 
@@ -94,10 +96,10 @@ export default function AdminPro() {
     <div className="min-h-screen bg-[#0b0f14] text-white flex">
 
       {/* Sidebar */}
-      <aside className="w-64 border-r border-white/10 p-6">
-        <div className="text-xl font-bold mb-10">Dashboard</div>
-        <button onClick={()=>setTab('links')} className="block mb-2">Links</button>
-        <button onClick={()=>setTab('stats')}>Stats</button>
+      <aside className="w-64 border-r border-white/10 p-6 flex flex-col">
+        <div className="text-xl font-bold mb-10">Admin</div>
+        <button onClick={()=>setTab('links')} className={`text-left mb-2 p-2 rounded ${tab==='links'?'bg-white/10':''}`}>Links</button>
+        <button onClick={()=>setTab('stats')} className={`text-left p-2 rounded ${tab==='stats'?'bg-white/10':''}`}>Stats</button>
       </aside>
 
       {/* Main */}
@@ -111,51 +113,58 @@ export default function AdminPro() {
           <KPI label="Top Clicks" value={topLink?.clicks || 0} />
         </div>
 
-        {/* Insight */}
-        <Card>
-          <div className="font-semibold mb-2">Insights</div>
-          {insights.length === 0 ? (
-            <div className="text-gray-400">No insight yet</div>
-          ) : insights.map((i,idx)=> (
-            <div key={idx} className="text-sm text-gray-300">{i}</div>
-          ))}
-        </Card>
+        {/* Main Content Split */}
+        <div className="grid grid-cols-3 gap-6">
 
-        {tab === 'links' && (
-          <Card>
-            <input
-              value={search}
-              onChange={e=>setSearch(e.target.value)}
-              placeholder="Search..."
-              className="mb-4 w-full p-2 bg-black/40 border border-white/10 rounded"
-            />
+          {/* LEFT: TABLE */}
+          <div className="col-span-2">
+            <Card>
+              <input
+                value={search}
+                onChange={e=>setSearch(e.target.value)}
+                placeholder="Search..."
+                className="mb-4 w-full p-2 bg-black/40 border border-white/10 rounded"
+              />
 
-            <table className="w-full text-sm">
-              <thead className="text-gray-400">
-                <tr>
-                  <th>Slug</th>
-                  <th>URL</th>
-                  <th>Network</th>
-                  <th>Clicks</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map(l => (
-                  <tr key={l.id} className={l.clicks === 0 ? 'opacity-40' : ''}>
-                    <td>/{l.slug}</td>
-                    <td className="truncate max-w-xs">{l.original_url}</td>
-                    <td>{l.network}</td>
-                    <td className="font-bold">{l.clicks}</td>
+              <table className="w-full text-sm">
+                <thead className="text-gray-400 border-b border-white/10">
+                  <tr>
+                    <th className="text-left py-2">Slug</th>
+                    <th className="text-left">URL</th>
+                    <th>Network</th>
+                    <th>Clicks</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </Card>
-        )}
+                </thead>
+                <tbody>
+                  {filtered.map(l => (
+                    <tr key={l.id} className={`border-b border-white/5 hover:bg-white/5 ${l.clicks===0?'opacity-40':''}`}>
+                      <td className="py-2">/{l.slug}</td>
+                      <td className="truncate max-w-xs">{l.original_url}</td>
+                      <td><Badge>{l.network}</Badge></td>
+                      <td className="font-bold text-center">{l.clicks}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Card>
+          </div>
 
+          {/* RIGHT: INSIGHTS */}
+          <div>
+            <Card>
+              <div className="font-semibold mb-3">Insights</div>
+              {insights.map((i,idx)=> (
+                <div key={idx} className="text-sm text-gray-300 mb-2">{i}</div>
+              ))}
+            </Card>
+          </div>
+
+        </div>
+
+        {/* Stats placeholder */}
         {tab === 'stats' && (
           <Card>
-            <div className="text-gray-400">(Chart sẽ gắn vào đây sau)</div>
+            <div className="text-gray-400">(Chart sẽ làm ở bước tiếp theo)</div>
           </Card>
         )}
 
