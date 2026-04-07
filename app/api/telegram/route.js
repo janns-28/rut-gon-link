@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '../../../lib/supabase';
-import { kv } from '@vercel/kv'; // Phải import thêm cái này để xóa Cache
+import { kv } from '@vercel/kv';
 
-// Nhớ bỏ Token vào file .env nhé, để lộ cứng ở đây nguy hiểm lắm
+// Để luôn token ở đây cho nhanh, khỏi cần file .env gì hết
 const TELEGRAM_TOKEN = '8299092137:AAE2QHihAeZeJx-yzPBigEsY2y2o2UC8sCI'; 
 
 async function sendMessage(chatId, text) {
@@ -33,24 +33,20 @@ export async function POST(request) {
         return NextResponse.json({ ok: true });
       }
 
-      // Bước 1: Xóa trong Database Supabase
-      const { error } = await supabase
-        .from('links')
-        .delete()
-        .eq('slug', slugToDelete);
+      // Xóa trong Database
+      const { error } = await supabase.from('links').delete().eq('slug', slugToDelete);
 
       if (error) {
         await sendMessage(chatId, `⚠️ Lỗi Database khi xóa: ${error.message}`);
       } else {
-        // Bước 2: Ép Vercel KV xóa ngay bộ nhớ đệm, không cho nó sống thêm 1 tiếng
+        // Xóa bộ nhớ đệm
         await kv.del(slugToDelete);
         await sendMessage(chatId, `✅ Đã tiêu diệt gọn gàng link: ${slugToDelete}`);
       }
       return NextResponse.json({ ok: true });
     }
-    // --------------------------
 
-    // --- TÍNH NĂNG TẠO LINK (GIỮ NGUYÊN) ---
+    // --- TÍNH NĂNG TẠO LINK ---
     const url = commandOrUrl;
     const slug = parts[1] || Math.random().toString(36).substr(2, 6);
 
@@ -59,12 +55,7 @@ export async function POST(request) {
       return NextResponse.json({ ok: true });
     }
 
-    const { error } = await supabase
-      .from('links')
-      .insert([{ 
-        slug: slug, 
-        original_url: url 
-      }]);
+    const { error } = await supabase.from('links').insert([{ slug: slug, original_url: url }]);
 
     if (error) {
       await sendMessage(chatId, `⚠️ Lỗi Database: ${error.message}`);
