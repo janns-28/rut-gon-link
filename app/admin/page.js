@@ -16,8 +16,6 @@ const getNetworkInfo = (url) => {
 export default function PremiumAdmin() {
   const [links, setLinks] = useState([]);
   const [clickLogs, setClickLogs] = useState([]);
-  
-  // CHỨC NĂNG THÊM: Biến lưu tổng số click mọi thời đại
   const [totalClicks, setTotalClicks] = useState(0); 
 
   const [loading, setLoading] = useState(true);
@@ -26,7 +24,6 @@ export default function PremiumAdmin() {
   const [expandedGroups, setExpandedGroups] = useState({});
   const [activeTab, setActiveTab] = useState('links');
 
-  // State cho Modal tạo link
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newUrl, setNewUrl] = useState('');
   const [customSlug, setCustomSlug] = useState('');
@@ -34,7 +31,6 @@ export default function PremiumAdmin() {
 
   useEffect(() => {
     fetchData();
-    // CHỨC NĂNG THÊM: Bật realtime
     const cleanupRealtime = setupRealtime();
     return () => { if (cleanupRealtime) cleanupRealtime(); };
   }, []);
@@ -42,11 +38,9 @@ export default function PremiumAdmin() {
   async function fetchData() {
     setLoading(true);
     try {
-      // CHỨC NĂNG THÊM: Đếm tổng click cực nhanh, không tốn RAM
       const { count } = await supabase.from('click_logs').select('*', { count: 'exact', head: true });
       if (count !== null) setTotalClicks(count);
 
-      // CHỨC NĂNG THÊM: Chỉ tải log 30 ngày gần nhất để web mượt
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -64,7 +58,6 @@ export default function PremiumAdmin() {
     }
   }
 
-  // CHỨC NĂNG THÊM: Tự động bắt click mới không cần F5
   function setupRealtime() {
     const channel = supabase.channel('custom-all-channel')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'click_logs' }, (payload) => {
@@ -88,13 +81,8 @@ export default function PremiumAdmin() {
     const finalSlug = customSlug.trim() || Math.random().toString(36).substring(2, 8);
 
     try {
-      const { data, error } = await supabase
-        .from('links')
-        .insert([{ slug: finalSlug, original_url: newUrl }])
-        .select();
-
+      const { data, error } = await supabase.from('links').insert([{ slug: finalSlug, original_url: newUrl }]).select();
       if (error) throw error;
-
       setLinks([data[0], ...links]);
       showToast(`✅ Lên camp thành công: /${finalSlug}`);
       setIsModalOpen(false);
@@ -162,9 +150,7 @@ export default function PremiumAdmin() {
   }, [links, search]);
 
   const { topLinks, topReferrers, topDevices } = useMemo(() => {
-    const counts = {};
-    const refs = {};
-    const devs = {};
+    const counts = {}; const refs = {}; const devs = {};
 
     clickLogs.forEach(log => {
       counts[log.slug] = (counts[log.slug] || 0) + 1;
@@ -177,9 +163,7 @@ export default function PremiumAdmin() {
       else if (lowerRef.includes('zalo')) ref = 'Zalo';
       else if (lowerRef.includes('instagram.com')) ref = 'Instagram';
       else if (lowerRef.includes('youtube.com')) ref = 'YouTube';
-      else if (lowerRef.startsWith('http')) {
-        try { ref = new URL(ref).hostname; } catch(e){}
-      }
+      else if (lowerRef.startsWith('http')) { try { ref = new URL(ref).hostname; } catch(e){} }
       refs[ref] = (refs[ref] || 0) + 1;
 
       const ua = (log.user_agent || '').toLowerCase();
@@ -192,23 +176,15 @@ export default function PremiumAdmin() {
     });
 
     return {
-      topLinks: Object.entries(counts)
-        .map(([slug, count]) => {
+      topLinks: Object.entries(counts).map(([slug, count]) => {
           const linkData = links.find(l => l.slug === slug);
-          return { 
-            slug, count, 
-            originalUrl: linkData?.original_url || 'N/A',
-            network: linkData ? getNetworkInfo(linkData.original_url).name : 'Unknown'
-          };
+          return { slug, count, originalUrl: linkData?.original_url || 'N/A', network: linkData ? getNetworkInfo(linkData.original_url).name : 'Unknown' };
         }).sort((a, b) => b.count - a.count),
       topReferrers: Object.entries(refs).sort((a, b) => b[1] - a[1]),
       topDevices: Object.entries(devs).sort((a, b) => b[1] - a[1])
     };
   }, [clickLogs, links]);
 
-  // ==========================================
-  // THIẾT KẾ (UI/UX) - GIỮ Y NGUYÊN BẢN GỐC CỦA MÀI
-  // ==========================================
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', backgroundColor: '#0f1115', color: '#e2e8f0', fontFamily: '"Inter", system-ui, -apple-system, sans-serif' }}>
       
@@ -226,11 +202,7 @@ export default function PremiumAdmin() {
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', color: '#94a3b8', fontSize: '0.9rem' }}>Link Đích (Affiliate Link)</label>
                 <input 
-                  type="url" 
-                  required
-                  placeholder="https://dinos.click/..." 
-                  value={newUrl}
-                  onChange={(e) => setNewUrl(e.target.value)}
+                  type="url" required placeholder="https://dinos.click/..." value={newUrl} onChange={(e) => setNewUrl(e.target.value)}
                   style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#1e293b', color: '#f8fafc', boxSizing: 'border-box', outline: 'none' }}
                 />
               </div>
@@ -239,10 +211,7 @@ export default function PremiumAdmin() {
                 <div style={{ display: 'flex', alignItems: 'center', background: '#1e293b', border: '1px solid #374151', borderRadius: '8px', padding: '0 12px' }}>
                   <span style={{ color: '#64748b' }}>/</span>
                   <input 
-                    type="text" 
-                    placeholder="vay-tien-nhanh" 
-                    value={customSlug}
-                    onChange={(e) => setCustomSlug(e.target.value.replace(/[^a-zA-Z0-9-]/g, ''))}
+                    type="text" placeholder="vay-tien-nhanh" value={customSlug} onChange={(e) => setCustomSlug(e.target.value.replace(/[^a-zA-Z0-9-]/g, ''))}
                     style={{ width: '100%', padding: '12px 8px', border: 'none', background: 'transparent', color: '#f8fafc', outline: 'none' }}
                   />
                 </div>
@@ -266,12 +235,10 @@ export default function PremiumAdmin() {
         
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
           <button onClick={() => setActiveTab('links')} style={{ width: '100%', border: 'none', cursor: 'pointer', padding: '12px 16px', borderRadius: '8px', background: activeTab === 'links' ? '#1f2937' : 'transparent', color: activeTab === 'links' ? '#f8fafc' : '#94a3b8', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '12px', transition: 'all 0.2s' }}>
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-            Quản lý Links
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg> Quản lý Links
           </button>
           <button onClick={() => setActiveTab('stats')} style={{ width: '100%', border: 'none', cursor: 'pointer', padding: '12px 16px', borderRadius: '8px', background: activeTab === 'stats' ? '#1f2937' : 'transparent', color: activeTab === 'stats' ? '#f8fafc' : '#94a3b8', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '12px', transition: 'all 0.2s' }}>
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-            Thống kê Traffic
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg> Thống kê Traffic
           </button>
         </nav>
       </aside>
@@ -300,8 +267,7 @@ export default function PremiumAdmin() {
                   onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
                   onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
                 >
-                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"></path></svg>
-                  Tạo Link Mới
+                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"></path></svg> Tạo Link Mới
                 </button>
               </div>
             </header>
@@ -310,10 +276,7 @@ export default function PremiumAdmin() {
               <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
                 <svg style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 <input 
-                  type="text" 
-                  placeholder="Tìm kiếm mã hoặc link gốc..." 
-                  value={search} 
-                  onChange={(e) => setSearch(e.target.value)} 
+                  type="text" placeholder="Tìm kiếm mã hoặc link gốc..." value={search} onChange={(e) => setSearch(e.target.value)} 
                   style={{ width: '100%', padding: '12px 16px 12px 44px', borderRadius: '10px', border: '1px solid #374151', background: '#111318', color: '#f8fafc', fontSize: '0.95rem', outline: 'none', transition: 'all 0.2s', boxSizing: 'border-box' }} 
                 />
               </div>
@@ -334,7 +297,9 @@ export default function PremiumAdmin() {
                     <tr><td colSpan="4" style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Không tìm thấy chiến dịch nào. Hãy tạo phễu mới.</td></tr>
                   ) : (
                     Object.entries(groupedLinks).map(([netName, group]) => {
-                      const isExpanded = search !== '' || expandedGroups[netName] !== false;
+                      // ĐÂY LÀ DÒNG CHỈNH LẠI ĐỂ MẶC ĐỊNH SẼ ĐÓNG, CHỈ MỞ KHI CÓ SEARCH HOẶC BẤM VÀO
+                      const isExpanded = search !== '' || expandedGroups[netName] === true;
+                      
                       return (
                         <React.Fragment key={netName}>
                           <tr onClick={() => toggleGroup(netName)} style={{ background: '#1e293b', borderBottom: '1px solid #334155', cursor: 'pointer', transition: 'background 0.2s', userSelect: 'none' }}>
@@ -355,8 +320,7 @@ export default function PremiumAdmin() {
                               <tr key={l.id} style={{ borderBottom: '1px solid #1f2937', transition: 'background 0.15s' }} onMouseEnter={(e) => e.currentTarget.style.background = '#181b23'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                                 <td style={{ padding: '16px 24px' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ color: '#64748b' }}>/</span>
-                                    <strong style={{ color: '#f8fafc', letterSpacing: '0.5px' }}>{l.slug}</strong>
+                                    <span style={{ color: '#64748b' }}>/</span><strong style={{ color: '#f8fafc', letterSpacing: '0.5px' }}>{l.slug}</strong>
                                   </div>
                                 </td>
                                 <td style={{ padding: '16px 24px', maxWidth: '350px' }}>
@@ -397,7 +361,6 @@ export default function PremiumAdmin() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
               <div style={{ background: '#111318', padding: '24px', borderRadius: '16px', border: '1px solid #1f2937', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
                 <div style={{ color: '#94a3b8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: '600' }}>Tổng số Click (All-time)</div>
-                {/* HIỂN THỊ BIẾN TOTAL CLICKS TẠI ĐÂY ĐỂ TRÁNH LỖI RAM */}
                 <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#10b981' }}>{totalClicks.toLocaleString()}</div>
               </div>
               <div style={{ background: '#111318', padding: '24px', borderRadius: '16px', border: '1px solid #1f2937', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
