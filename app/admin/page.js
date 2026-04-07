@@ -19,10 +19,11 @@ export default function PremiumAdmin() {
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState('');
   const [expandedGroups, setExpandedGroups] = useState({});
-  const [activeTab, setActiveTab] = useState('links');
+  const [activeTab, setActiveTab] = useState('links'); // 'links' hoặc 'stats'
 
   useEffect(() => {
     async function fetchData() {
+      // Tải song song cả Links và Click Logs
       const [linksRes, logsRes] = await Promise.all([
         supabase.from('links').select('*').order('created_at', { ascending: false }),
         supabase.from('click_logs').select('*')
@@ -35,7 +36,7 @@ export default function PremiumAdmin() {
     fetchData();
   }, []);
 
-  // LOGIC TÍNH TOÁN TÍN HIỆU CẮN SỐ CỦA TỪNG LINK
+  // --- LOGIC TÍN HIỆU CẮN SỐ THÊM VÀO ---
   const getLastClickInfo = (slug) => {
     const logs = clickLogs.filter(log => log.slug === slug);
     if (logs.length === 0) return { text: 'Chưa có click', color: '#64748b', isDead: false };
@@ -49,6 +50,7 @@ export default function PremiumAdmin() {
     return { text: `Đứng im >${Math.floor(diffHours)}h ⚠️`, color: '#ef4444', isDead: true };
   };
 
+  // --- XỬ LÝ DỮ LIỆU TAB LINKS ---
   const filteredLinks = links.filter(l => 
     l.slug.toLowerCase().includes(search.toLowerCase()) || 
     l.original_url.toLowerCase().includes(search.toLowerCase())
@@ -91,6 +93,8 @@ export default function PremiumAdmin() {
     }
   };
 
+  // --- XỬ LÝ DỮ LIỆU TAB THỐNG KÊ ---
+  // 1. Đếm click theo Slug (Leaderboard)
   const clickCounts = clickLogs.reduce((acc, log) => {
     acc[log.slug] = (acc[log.slug] || 0) + 1;
     return acc;
@@ -107,6 +111,7 @@ export default function PremiumAdmin() {
     })
     .sort((a, b) => b.count - a.count);
 
+  // 2. Phân tích Nguồn Traffic
   const referrerCounts = clickLogs.reduce((acc, log) => {
     let ref = log.referrer || 'Direct (Truy cập thẳng)';
     const lowerRef = ref.toLowerCase();
@@ -124,6 +129,7 @@ export default function PremiumAdmin() {
   }, {});
   const topReferrers = Object.entries(referrerCounts).sort((a, b) => b[1] - a[1]);
 
+  // 3. Phân tích Thiết bị (Hệ điều hành)
   const deviceCounts = clickLogs.reduce((acc, log) => {
     const ua = (log.user_agent || '').toLowerCase();
     let device = 'Khác';
@@ -136,7 +142,6 @@ export default function PremiumAdmin() {
   }, {});
   const topDevices = Object.entries(deviceCounts).sort((a, b) => b[1] - a[1]);
 
-  // FONT QUỐC DÂN: Inter + System UI Apple/Windows
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0f1115', color: '#e2e8f0', fontFamily: '"Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif' }}>
       
@@ -146,7 +151,7 @@ export default function PremiumAdmin() {
         </div>
       )}
 
-      {/* SIDEBAR BẢN GỐC CỦA MÁ */}
+      {/* SIDEBAR */}
       <aside style={{ width: '260px', borderRight: '1px solid #1f2937', backgroundColor: '#111318', padding: '24px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '40px' }}>
           <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff' }}>B</div>
@@ -171,7 +176,9 @@ export default function PremiumAdmin() {
         </nav>
       </aside>
 
+      {/* MAIN CONTENT */}
       <main style={{ flex: 1, padding: '40px 50px', overflowY: 'auto' }}>
+        
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
             <div style={{ color: '#64748b', fontSize: '1.2rem' }}>Đang đồng bộ dữ liệu hệ thống... ⏳</div>
@@ -209,6 +216,7 @@ export default function PremiumAdmin() {
                 <thead>
                   <tr style={{ background: '#181b23', borderBottom: '1px solid #1f2937' }}>
                     <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Mã Rút Gọn</th>
+                    {/* ĐỔI TÊN CỘT CHỖ NÀY */}
                     <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Link Gốc & Tín Hiệu</th>
                     <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ngày Lên Camp</th>
                     <th style={{ padding: '16px 24px', color: '#94a3b8', fontWeight: '600', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'right' }}>Thao tác</th>
@@ -238,15 +246,16 @@ export default function PremiumAdmin() {
                             const lastClick = getLastClickInfo(l.slug);
                             return (
                               <tr key={l.id} style={{ borderBottom: '1px solid #1f2937', transition: 'background 0.15s', animation: 'fadeIn 0.2s ease-out' }} onMouseEnter={(e) => e.currentTarget.style.background = '#181b23'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                                {/* MÃ RÚT GỌN */}
+                                
+                                {/* CỘT 1: MÃ RÚT GỌN */}
                                 <td style={{ padding: '16px 24px' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <span style={{ color: '#64748b' }}>/</span>
                                     <strong style={{ color: '#f8fafc', letterSpacing: '0.5px' }}>{l.slug}</strong>
                                   </div>
                                 </td>
-                                
-                                {/* LINK GỐC VÀ TÍN HIỆU CẮN SỐ */}
+
+                                {/* CỘT 2: LINK GỐC + TÍN HIỆU CẮN SỐ */}
                                 <td style={{ padding: '16px 24px', maxWidth: '350px' }}>
                                   <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', color: '#cbd5e1', fontSize: '0.9rem', marginBottom: '4px' }} title={l.original_url}>{l.original_url}</div>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: '500', color: lastClick.color }}>
@@ -257,12 +266,12 @@ export default function PremiumAdmin() {
                                   </div>
                                 </td>
 
-                                {/* NGÀY LÊN CAMP CỦA MÁ VẪN Ở ĐÂY */}
+                                {/* CỘT 3: NGÀY LÊN CAMP */}
                                 <td style={{ padding: '16px 24px', color: '#94a3b8', fontSize: '0.9rem' }}>
                                   {new Date(l.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                                 </td>
-                                
-                                {/* THAO TÁC */}
+
+                                {/* CỘT 4: THAO TÁC */}
                                 <td style={{ padding: '16px 24px', textAlign: 'right' }}>
                                   <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                                     <button onClick={() => handleCopy(l.slug)} title="Copy" style={{ background: '#374151', color: '#d1d5db', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>
@@ -283,7 +292,7 @@ export default function PremiumAdmin() {
           </div>
         ) : (
           /* =========================================
-             THỐNG KÊ TRAFFIC BẢN GỐC (CHỈ UPDATE FONT)
+                      GIAO DIỆN TAB THỐNG KÊ (Y XÌ BẢN GỐC)
              ========================================= */
           <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
             <header style={{ marginBottom: '40px' }}>
