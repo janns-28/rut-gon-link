@@ -7,7 +7,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
 
-// Danh sách Bot cần đuổi cổ
+// Tập hợp Bot rác cần chặn
 const BOT_AGENTS = [
   'bot', 'spider', 'crawler', 'facebookexternalhit', 'slurp',
   'duckduckbot', 'tiktok', 'googlebot', 'bingbot', 'yandexbot', 'telegrambot'
@@ -17,24 +17,26 @@ export async function middleware(request) {
   const { pathname } = request.nextUrl;
 
   // ==========================================
-  // 1. Ổ KHÓA CỦA MÀY: BẢO VỆ TRANG ADMIN
+  // 1. BẢO VỆ TRANG ADMIN (KHÔNG CÓ CHÌA KHÓA LÀ ĐÁ VĂNG)
   // ==========================================
   if (pathname.startsWith('/admin')) {
     const adminKey = request.cookies.get('admin_key')?.value;
-    // Không có chìa khóa hoặc sai chìa -> Đá văng ra trang Login
-    if (adminKey !== process.env.ADMIN_SECRET_KEY) {
+    const serverKey = process.env.ADMIN_SECRET_KEY;
+
+    // Nếu trên Vercel chưa cài pass, hoặc khách không có vé -> Đuổi ra /login
+    if (!serverKey || adminKey !== serverKey) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
   }
 
   // ==========================================
-  // 2. BỎ QUA CÁC TRANG HỆ THỐNG KHÔNG CẦN BẺ LÁI
+  // 2. BỎ QUA CÁC TRANG KHÔNG CẦN CHUYỂN HƯỚNG
   // ==========================================
   if (
     pathname.startsWith('/api/') || 
     pathname.startsWith('/_next') || 
     pathname === '/' || 
-    pathname === '/login' || // Cho phép vào trang login
+    pathname === '/login' ||
     pathname === '/top' || 
     pathname === '/favicon.ico'
   ) {
@@ -42,16 +44,16 @@ export async function middleware(request) {
   }
 
   // ==========================================
-  // 3. XỬ LÝ KHÁCH BẤM LINK VÀ NHÉT ĐỊNH VỊ HYPERLEAD
+  // 3. XỬ LÝ KHÁCH VÀ GẮN ĐỊNH VỊ HYPERLEAD
   // ==========================================
   const slug = pathname.slice(1);
   let targetUrl = null;
 
   try {
-    // Tìm link đích trong KV (cache) cho nhanh
+    // Tìm link trong cache
     targetUrl = await kv.get(slug);
 
-    // Nếu rớt cache thì vào Database móc ra
+    // Không có thì móc trong Supabase
     if (!targetUrl) {
       const { data } = await supabase.from('links').select('original_url').eq('slug', slug).single();
       if (data?.original_url) {
@@ -63,21 +65,21 @@ export async function middleware(request) {
     if (targetUrl) {
       const userAgent = request.headers.get('user-agent') || 'Unknown';
       const ip = request.headers.get('x-forwarded-for') || request.ip || 'Unknown';
-      const originalReferrer = request.headers.get('referer') || 'Direct (Truy cập thẳng)';
+      const originalReferrer = request.headers.get('referer') || 'Direct (Trực tiếp)';
 
-      // Kiểm tra xem có phải thằng Bot đang soi link không
+      // Kiểm tra Bot
       const isBot = BOT_AGENTS.some(bot => userAgent.toLowerCase().includes(bot));
       if (isBot) {
-        // Đuổi mẹ về trang chủ, đéo đếm click
         return NextResponse.rewrite(new URL('/', request.url));
       }
 
-      // Lưu lại nguồn khách (Tiktok, Facebook...)
+      // Lưu lại nguồn (s=tiktok...)
       const source = request.nextUrl.searchParams.get('s') || request.nextUrl.searchParams.get('utm_source');
       const finalReferrer = source ? `[Nguồn: ${source}] ${originalReferrer}` : originalReferrer;
 
-      // --- KHÚC QUAN TRỌNG: Ghi log và tạo thẻ định vị aff_sub1 ---
-      
+      // ==========================================
+      // KHÚC ĂN TIỀN: GHI LOG & GẮN aff_sub1
+      // ==========================================
       const { data: logData } = await supabase
         .from('click_logs')
         .insert([{ 
@@ -91,16 +93,16 @@ export async function middleware(request) {
 
       const finalUrl = new URL(targetUrl);
       
-      // Nhét ID khách vào đuôi link để HyperLead biết đường trả tiền
+      // Có ID là nhét ngay vào đuôi link
       if (logData && logData.id) {
         finalUrl.searchParams.set('aff_sub1', logData.id);
       }
 
-      // Đá văng khách đi vay
+      // Đá văng khách đi vay tiền
       return NextResponse.redirect(finalUrl);
     }
   } catch (e) {
-    console.error("Lỗi mẹ nó rồi:", e);
+    console.error("Lỗi Middleware:", e);
   }
 
   return NextResponse.next();
