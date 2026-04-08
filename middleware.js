@@ -2,10 +2,6 @@ import { NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
 import { createClient } from '@supabase/supabase-js'
 
-export const config = {
-  runtime: 'edge', // Bật chế độ siêu tốc độ Edge
-}
-
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
