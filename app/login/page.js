@@ -29,14 +29,7 @@ export default function ModernAppleLogin() {
         body: JSON.stringify({ username, password }),
       });
       const data = await res.json();
-      
-      if (data.success) {
-        // TÔI CHỈ THÊM ĐÚNG 1 DÒNG NÀY Ở ĐÂY NÍ NHÉ:
-        // Lấy đúng cái password mày nhập để làm chìa khóa qua mặt Middleware
-        document.cookie = `admin_key=${password}; path=/; max-age=86400`;
-        
-        router.push('/admin');
-      }
+      if (data.success) router.push('/admin');
       else setError(data.message || 'Sai thông tin đăng nhập');
     } catch (err) { setError('Lỗi kết nối hệ thống'); }
     finally { setLoading(false); }
