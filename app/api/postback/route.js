@@ -7,7 +7,7 @@ const supabase = createClient(
 );
 
 // Mày nhớ cấu hình biến môi trường TELEGRAM_TOKEN nhé
-const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN; 
+const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 // ĐIỀN CHAT ID CỦA MÀY VÀO ĐÂY (Vào Bot @userinfobot trên Tele lấy dãy số id)
 const CHAT_ID = '5476495357'; 
 
