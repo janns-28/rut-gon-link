@@ -47,7 +47,7 @@ export async function GET(request) {
       .from('click_logs')
       .update({ 
         status: dbStatus, 
-        commission: payout || 0 
+        payout: payout || 0 
       })
       .eq('id', clickId); // Khớp đúng với ID click ban đầu
 
