@@ -7,7 +7,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
 
-// Tập hợp các loại Bot kiểm duyệt của nền tảng để cho mù mắt
+// Danh sách Bot cần đuổi cổ
 const BOT_AGENTS = [
   'bot', 'spider', 'crawler', 'facebookexternalhit', 'slurp',
   'duckduckbot', 'tiktok', 'googlebot', 'bingbot', 'yandexbot', 'telegrambot'
@@ -17,24 +17,24 @@ export async function middleware(request) {
   const { pathname } = request.nextUrl;
 
   // ==========================================
-  // 1. KIỂM TRA QUYỀN TRUY CẬP TRANG ADMIN BẰNG SECRET KEY
+  // 1. Ổ KHÓA CỦA MÀY: BẢO VỆ TRANG ADMIN
   // ==========================================
   if (pathname.startsWith('/admin')) {
     const adminKey = request.cookies.get('admin_key')?.value;
-    // Chìa khóa phải khớp với cấu hình trên Vercel mới cho vào
+    // Không có chìa khóa hoặc sai chìa -> Đá văng ra trang Login
     if (adminKey !== process.env.ADMIN_SECRET_KEY) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
   }
 
   // ==========================================
-  // 2. BỎ QUA FILE HỆ THỐNG VÀ CÁC TRANG NỘI BỘ
+  // 2. BỎ QUA CÁC TRANG HỆ THỐNG KHÔNG CẦN BẺ LÁI
   // ==========================================
   if (
     pathname.startsWith('/api/') || 
     pathname.startsWith('/_next') || 
     pathname === '/' || 
-    pathname === '/login' ||
+    pathname === '/login' || // Cho phép vào trang login
     pathname === '/top' || 
     pathname === '/favicon.ico'
   ) {
@@ -42,16 +42,16 @@ export async function middleware(request) {
   }
 
   // ==========================================
-  // 3. XỬ LÝ LỌC BOT, BẮT NGUỒN VÀ NỐI DÂY HYPERLEAD
+  // 3. XỬ LÝ KHÁCH BẤM LINK VÀ NHÉT ĐỊNH VỊ HYPERLEAD
   // ==========================================
   const slug = pathname.slice(1);
   let targetUrl = null;
 
   try {
-    // Tìm link đích trong KV trước cho lẹ
+    // Tìm link đích trong KV (cache) cho nhanh
     targetUrl = await kv.get(slug);
 
-    // Không có thì chui vào Database lấy ra
+    // Nếu rớt cache thì vào Database móc ra
     if (!targetUrl) {
       const { data } = await supabase.from('links').select('original_url').eq('slug', slug).single();
       if (data?.original_url) {
@@ -65,23 +65,20 @@ export async function middleware(request) {
       const ip = request.headers.get('x-forwarded-for') || request.ip || 'Unknown';
       const originalReferrer = request.headers.get('referer') || 'Direct (Truy cập thẳng)';
 
-      // Kiểm tra Bot
+      // Kiểm tra xem có phải thằng Bot đang soi link không
       const isBot = BOT_AGENTS.some(bot => userAgent.toLowerCase().includes(bot));
       if (isBot) {
-        // LÀ BOT: Đuổi về trang chủ, đéo đếm số
+        // Đuổi mẹ về trang chủ, đéo đếm click
         return NextResponse.rewrite(new URL('/', request.url));
       }
 
-      // MẮT THẦN DÒ NGUỒN (Lấy ?s=tiktok)
+      // Lưu lại nguồn khách (Tiktok, Facebook...)
       const source = request.nextUrl.searchParams.get('s') || request.nextUrl.searchParams.get('utm_source');
       const finalReferrer = source ? `[Nguồn: ${source}] ${originalReferrer}` : originalReferrer;
 
-      // ==========================================
-      // KHÚC QUAN TRỌNG: GHI LOG & GẮN aff_sub1
-      // ==========================================
+      // --- KHÚC QUAN TRỌNG: Ghi log và tạo thẻ định vị aff_sub1 ---
       
-      // BƯỚC A: Chờ Database ghi lại khách này và sinh ra cái ID
-      const { data: logData, error } = await supabase
+      const { data: logData } = await supabase
         .from('click_logs')
         .insert([{ 
           slug: slug, 
@@ -92,19 +89,18 @@ export async function middleware(request) {
         .select('id')
         .single();
 
-      // BƯỚC B: Bẻ lái sang link đích (có thể là link app vay HyperLead hoặc trang /top)
       const finalUrl = new URL(targetUrl);
       
-      // Nếu có ID log thì gắn thẻ định vị aff_sub1 vào đuôi link
+      // Nhét ID khách vào đuôi link để HyperLead biết đường trả tiền
       if (logData && logData.id) {
         finalUrl.searchParams.set('aff_sub1', logData.id);
       }
 
-      // BƯỚC C: Đá văng khách đi kèm theo định vị
+      // Đá văng khách đi vay
       return NextResponse.redirect(finalUrl);
     }
   } catch (e) {
-    console.error("Lỗi Middleware:", e);
+    console.error("Lỗi mẹ nó rồi:", e);
   }
 
   return NextResponse.next();
