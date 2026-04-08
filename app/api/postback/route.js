@@ -9,7 +9,7 @@ const supabase = createClient(
 // Mày nhớ cấu hình biến môi trường TELEGRAM_TOKEN nhé
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN; 
 // ĐIỀN CHAT ID CỦA MÀY VÀO ĐÂY (Vào Bot @userinfobot trên Tele lấy dãy số id)
-const CHAT_ID = '123456789'; 
+const CHAT_ID = '5476495357'; 
 
 async function sendTingTing(text) {
   if (!TELEGRAM_TOKEN || !CHAT_ID) return;
