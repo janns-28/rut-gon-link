@@ -443,6 +443,36 @@ const getLastClickInfo = (slug) => {
             </div>
           </div>
         )}
+
+{/* ========================================== */}
+        {/* BẢNG RADAR DÒ NGUỒN KHÁCH HÀNG (MẮT THẦN)    */}
+        {/* ========================================== */}
+        <div style={{ marginTop: '40px', background: '#1d1d1f', borderRadius: '16px', padding: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <h2 style={{ color: '#fff', fontSize: '18px', fontWeight: '600', marginBottom: '20px' }}>📡 Radar Dò Nguồn (10 Click Gần Nhất)</h2>
+          
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', color: '#a1a1a6', textAlign: 'left', borderCollapse: 'collapse', fontSize: '14px' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid #333', color: '#86868b' }}>
+                  <th style={{ padding: '12px 0', fontWeight: '500' }}>Thời gian</th>
+                  <th style={{ padding: '12px 0', fontWeight: '500' }}>Chiến dịch</th>
+                  <th style={{ padding: '12px 0', fontWeight: '500' }}>Nguồn khách đến</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Lấy 10 lượt click mới nhất để hiển thị */}
+                {clickLogs.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10).map((log, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid #262626' }}>
+                    <td style={{ padding: '14px 0' }}>{new Date(log.created_at).toLocaleTimeString('vi-VN')}</td>
+                    <td style={{ color: '#0071e3', fontWeight: '500' }}>/{log.slug}</td>
+                    <td style={{ color: '#10b981' }}>{log.referrer}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+          
       </main>
 
       <style dangerouslySetInnerHTML={{__html: `
