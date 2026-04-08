@@ -25,7 +25,7 @@ export async function middleware(request) {
   // 1. Ổ KHÓA TRANG ADMIN
   if (pathname.startsWith('/admin')) {
     const adminKey = request.cookies.get('admin_key')?.value;
-    const serverKey = process.env.ADMIN_SECRET_KEY;
+    const serverKey = process.env.ADMIN_PASSWORD;
 
     // Đéo có pass trên Vercel hoặc Cookie đéo khớp -> Trục xuất!
     if (!serverKey || adminKey !== serverKey) {
