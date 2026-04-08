@@ -454,20 +454,44 @@ const getLastClickInfo = (slug) => {
             <table style={{ width: '100%', color: '#a1a1a6', textAlign: 'left', borderCollapse: 'collapse', fontSize: '14px' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid #333', color: '#86868b' }}>
-                  <th style={{ padding: '12px 0', fontWeight: '500' }}>Thời gian</th>
-                  <th style={{ padding: '12px 0', fontWeight: '500' }}>Chiến dịch</th>
+                  <th style={{ padding: '12px 0', fontWeight: '500', width: '20%' }}>Thời gian</th>
+                  <th style={{ padding: '12px 0', fontWeight: '500', width: '30%' }}>Chiến dịch</th>
                   <th style={{ padding: '12px 0', fontWeight: '500' }}>Nguồn khách đến</th>
                 </tr>
               </thead>
               <tbody>
-                {/* Lấy 10 lượt click mới nhất để hiển thị */}
-                {clickLogs.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10).map((log, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid #262626' }}>
-                    <td style={{ padding: '14px 0' }}>{new Date(log.created_at).toLocaleTimeString('vi-VN')}</td>
-                    <td style={{ color: '#0071e3', fontWeight: '500' }}>/{log.slug}</td>
-                    <td style={{ color: '#10b981' }}>{log.referrer}</td>
-                  </tr>
-                ))}
+                {clickLogs.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10).map((log, i) => {
+                  
+                  // === BỘ LỌC TÚT TÁT LẠI CÁI TÊN NGUỒN CHO SẠCH ĐẸP ===
+                  let cleanSource = log.referrer || '';
+                  if (cleanSource.includes('[Nguồn:')) {
+                    const match = cleanSource.match(/\[Nguồn:\s*(.+?)\]/i);
+                    cleanSource = match ? `🎯 Nguồn: ${match[1].toUpperCase()}` : cleanSource;
+                  } else if (cleanSource.includes('facebook.com')) {
+                    cleanSource = '📘 Facebook';
+                  } else if (cleanSource.includes('threads.net') || cleanSource.includes('threads.com')) {
+                    cleanSource = '🧵 Threads';
+                  } else if (cleanSource.includes('tiktok.com')) {
+                    cleanSource = '🎵 TikTok';
+                  } else if (cleanSource.includes('Direct')) {
+                    cleanSource = '🌐 Truy cập thẳng';
+                  } else {
+                    // Nếu web lạ thì chỉ lấy cái tên miền ngắn gọn
+                    try {
+                      cleanSource = `🔗 ${new URL(cleanSource).hostname.replace('www.', '')}`;
+                    } catch (e) {
+                      cleanSource = '🌐 Mạng xã hội khác';
+                    }
+                  }
+
+                  return (
+                    <tr key={i} style={{ borderBottom: '1px solid #262626' }}>
+                      <td style={{ padding: '14px 0' }}>{new Date(log.created_at).toLocaleTimeString('vi-VN')}</td>
+                      <td style={{ color: '#0071e3', fontWeight: '500' }}>/{log.slug}</td>
+                      <td style={{ color: '#10b981', fontWeight: '600' }}>{cleanSource}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
