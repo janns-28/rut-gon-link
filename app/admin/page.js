@@ -29,14 +29,13 @@ export default function DeepBlueDashboard() {
   const [fontLoaded, setFontLoaded] = useState(false);
 
   useEffect(() => {
-    // 1. KÉO FONT PLUS JAKARTA SANS VỀ ĐỂ GIAO DIỆN CHUẨN XỊN NHƯ ẢNH
+    // Kéo Font Plus Jakarta Sans
     const link = document.createElement('link');
     link.href = 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap';
     link.rel = 'stylesheet';
     document.head.appendChild(link);
     setFontLoaded(true);
 
-    // 2. TẢI DỮ LIỆU
     fetchData();
     const cleanupRealtime = setupRealtime();
     return () => { if (cleanupRealtime) cleanupRealtime(); };
@@ -60,7 +59,6 @@ export default function DeepBlueDashboard() {
       if (logsRes.data) {
         setClickLogs(logsRes.data);
         
-        // Tính click hôm nay
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
         const todayClicks = logsRes.data.filter(log => new Date(log.created_at) >= startOfToday).length;
@@ -150,11 +148,9 @@ export default function DeepBlueDashboard() {
     red: '#ef4444'
   };
 
-  // Tránh chớp màn hình trước khi font load xong
   if (!fontLoaded) return <div style={{ backgroundColor: colors.bgApp, height: '100vh' }}></div>;
 
   return (
-    // Đã thay đổi fontFamily thành Plus Jakarta Sans
     <div style={{ display: 'flex', height: '100vh', backgroundColor: colors.bgApp, color: colors.textMain, fontFamily: '"Plus Jakarta Sans", "Inter", sans-serif', overflow: 'hidden' }}>
       
       {/* ======================================= */}
@@ -169,15 +165,15 @@ export default function DeepBlueDashboard() {
         </div>
 
         <nav style={{ padding: '0 12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <button onClick={() => setActiveTab('dashboard')} style={{ width: '100%', padding: '10px 14px', border: 'none', background: activeTab === 'dashboard' ? colors.bgCard : 'transparent', color: activeTab === 'dashboard' ? colors.blue : colors.textMuted, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', fontWeight: '600', transition: 'all 0.2s', textAlign: 'left', fontSize: '14px' }}>
+          <button onClick={() => setActiveTab('dashboard')} style={{ width: '100%', padding: '10px 14px', border: 'none', background: activeTab === 'dashboard' ? colors.bgCard : 'transparent', color: activeTab === 'dashboard' ? colors.blue : colors.textMuted, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', fontWeight: '600', transition: 'all 0.2s', textAlign: 'left', fontSize: '13px' }}>
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg> Dashboard
           </button>
           
-          <button onClick={() => setIsModalOpen(true)} style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'transparent', color: colors.textMuted, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', fontWeight: '600', transition: 'all 0.2s', textAlign: 'left', fontSize: '14px' }}>
+          <button onClick={() => setIsModalOpen(true)} style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'transparent', color: colors.textMuted, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', fontWeight: '600', transition: 'all 0.2s', textAlign: 'left', fontSize: '13px' }}>
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg> Tạo Link Phễu
           </button>
 
-          <button style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'transparent', color: colors.textMuted, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', fontWeight: '600', transition: 'all 0.2s', textAlign: 'left', fontSize: '14px' }}>
+          <button style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'transparent', color: colors.textMuted, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', fontWeight: '600', transition: 'all 0.2s', textAlign: 'left', fontSize: '13px' }}>
              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Activity Log
           </button>
         </nav>
@@ -189,64 +185,64 @@ export default function DeepBlueDashboard() {
       <main style={{ flex: 1, padding: '32px 40px', overflowY: 'auto' }}>
         
         {/* Header */}
-        <header style={{ marginBottom: '32px' }}>
+        <header style={{ marginBottom: '28px' }}>
           <h1 style={{ fontSize: '24px', fontWeight: '700', margin: '0 0 6px 0', letterSpacing: '-0.5px' }}>Dashboard</h1>
           <p style={{ color: colors.textMuted, margin: 0, fontSize: '14px', fontWeight: '500' }}>Overview of your affiliate operations</p>
         </header>
 
-        {/* 4 CARDS */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '24px' }}>
+        {/* 4 CARDS (ĐÃ ÉP NHỎ LẠI) */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '20px' }}>
           
-          <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-              <span style={{ color: colors.textMuted, fontSize: '14px', fontWeight: '600' }}>Tổng số Link</span>
-              <div style={{ background: colors.blueBg, padding: '6px', borderRadius: '6px', color: colors.blue }}>
-                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+          <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ color: colors.textMuted, fontSize: '13px', fontWeight: '600' }}>Tổng số Link</span>
+              <div style={{ background: colors.blueBg, padding: '4px', borderRadius: '6px', color: colors.blue }}>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
               </div>
             </div>
-            <div style={{ fontSize: '32px', fontWeight: '700', marginBottom: '8px', letterSpacing: '-0.5px' }}>{links.length}</div>
+            <div style={{ fontSize: '26px', fontWeight: '700', marginBottom: '6px', letterSpacing: '-0.5px' }}>{links.length}</div>
             <div style={{ fontSize: '12px', display: 'flex', gap: '8px', fontWeight: '500' }}>
               <span style={{ color: colors.green }}>{links.length > 0 ? links.length : 0} active</span>
               <span style={{ color: colors.red }}>0 suspended</span>
             </div>
           </div>
 
-          <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-              <span style={{ color: colors.textMuted, fontSize: '14px', fontWeight: '600' }}>Tổng Clicks</span>
-              <div style={{ background: colors.purpleBg, padding: '6px', borderRadius: '6px', color: colors.purple }}>
-                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+          <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ color: colors.textMuted, fontSize: '13px', fontWeight: '600' }}>Tổng Clicks</span>
+              <div style={{ background: colors.purpleBg, padding: '4px', borderRadius: '6px', color: colors.purple }}>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
               </div>
             </div>
-            <div style={{ fontSize: '32px', fontWeight: '700', marginBottom: '8px', letterSpacing: '-0.5px' }}>{totalClicks.toLocaleString()}</div>
+            <div style={{ fontSize: '26px', fontWeight: '700', marginBottom: '6px', letterSpacing: '-0.5px' }}>{totalClicks.toLocaleString()}</div>
             <div style={{ fontSize: '12px', display: 'flex', gap: '8px', fontWeight: '500' }}>
               <span style={{ color: colors.green }}>{totalClicks} ok</span>
               <span style={{ color: colors.red }}>0 bad</span>
             </div>
           </div>
 
-          <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-              <span style={{ color: colors.textMuted, fontSize: '14px', fontWeight: '600' }}>Nền tảng</span>
-              <div style={{ background: colors.orangeBg, padding: '6px', borderRadius: '6px', color: colors.orange }}>
-                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
+          <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ color: colors.textMuted, fontSize: '13px', fontWeight: '600' }}>Nền tảng</span>
+              <div style={{ background: colors.orangeBg, padding: '4px', borderRadius: '6px', color: colors.orange }}>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
               </div>
             </div>
-            <div style={{ fontSize: '32px', fontWeight: '700', marginBottom: '8px', letterSpacing: '-0.5px' }}>{networkCount}</div>
+            <div style={{ fontSize: '26px', fontWeight: '700', marginBottom: '6px', letterSpacing: '-0.5px' }}>{networkCount}</div>
             <div style={{ fontSize: '12px', display: 'flex', gap: '8px', fontWeight: '500' }}>
               <span style={{ color: colors.blue }}>{networkCount} running</span>
               <span style={{ color: colors.green }}>0 done</span>
             </div>
           </div>
 
-          <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-              <span style={{ color: colors.textMuted, fontSize: '14px', fontWeight: '600' }}>Clicks Today</span>
-              <div style={{ background: colors.greenBg, padding: '6px', borderRadius: '6px', color: colors.green }}>
-                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+          <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ color: colors.textMuted, fontSize: '13px', fontWeight: '600' }}>Clicks Today</span>
+              <div style={{ background: colors.greenBg, padding: '4px', borderRadius: '6px', color: colors.green }}>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
               </div>
             </div>
-            <div style={{ fontSize: '32px', fontWeight: '700', marginBottom: '8px', letterSpacing: '-0.5px' }}>{clicksToday.toLocaleString()}</div>
+            <div style={{ fontSize: '26px', fontWeight: '700', marginBottom: '6px', letterSpacing: '-0.5px' }}>{clicksToday.toLocaleString()}</div>
             <div style={{ fontSize: '12px', color: colors.textMuted, fontWeight: '500' }}>
               successful actions
             </div>
@@ -254,54 +250,54 @@ export default function DeepBlueDashboard() {
 
         </div>
 
-        {/* 2 PANELS Ở DƯỚI */}
+        {/* 2 PANELS Ở DƯỚI (ÉP HÀNG GỌN LẠI) */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
           
-          <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', minHeight: '300px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.border}` }}>
-              <span style={{ fontWeight: '700', fontSize: '15px' }}>Recent Campaigns</span>
-              <span style={{ color: colors.blue, fontSize: '13px', cursor: 'pointer', fontWeight: '500' }}>View all →</span>
+          <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.border}` }}>
+              <span style={{ fontWeight: '700', fontSize: '14px' }}>Recent Campaigns</span>
+              <span style={{ color: colors.blue, fontSize: '12px', cursor: 'pointer', fontWeight: '600' }}>View all →</span>
             </div>
             
-            <div style={{ padding: '10px 20px', flex: 1 }}>
+            <div style={{ padding: '0 20px', flex: 1 }}>
               {topLinks.length === 0 ? (
-                <div style={{ color: colors.textMuted, fontSize: '14px', textAlign: 'center', marginTop: '40px', fontWeight: '500' }}>No campaigns yet</div>
+                <div style={{ color: colors.textMuted, fontSize: '13px', textAlign: 'center', padding: '30px 0', fontWeight: '500' }}>No campaigns yet</div>
               ) : (
                 topLinks.map((link, idx) => (
-                  <div key={link.slug} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: idx === topLinks.length - 1 ? 'none' : `1px solid ${colors.border}` }}>
+                  <div key={link.slug} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: idx === topLinks.length - 1 ? 'none' : `1px solid ${colors.border}` }}>
                     
                     <div>
-                      <div style={{ fontSize: '15px', fontWeight: '700', marginBottom: '6px' }}>/{link.slug}</div>
+                      <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '4px' }}>/{link.slug}</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ background: link.network.bg, color: link.network.color, padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>
+                        <span style={{ background: link.network.bg, color: link.network.color, padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '700' }}>
                           {link.network.name}
                         </span>
-                        <span style={{ color: colors.textMuted, fontSize: '12px', fontWeight: '500' }}>0/1 done</span>
+                        <span style={{ color: colors.textMuted, fontSize: '11px', fontWeight: '500' }}>0/1 done</span>
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: colors.textMuted, fontSize: '13px', fontWeight: '500' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: colors.textMuted, fontSize: '12px', fontWeight: '600' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: colors.purple }}>
-                        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg> 
+                        <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg> 
                         {(link.count * 2.5).toFixed(1)}k
                       </span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: colors.red }}>
-                        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                        <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
                         {link.count}
                       </span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: colors.blue }}>
-                        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                        <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
                         {link.mobileClicks}
                       </span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: colors.green }}>
-                        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                        <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
                         {link.desktopClicks}
                       </span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: colors.orange }}>
-                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M3 21v-2l5-5h4l5 5v2H3zm12-11l3-3-3-3v2h-4V4H9v2H5v2h4v2h2v-2h4v2z"></path></svg>
+                        <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M3 21v-2l5-5h4l5 5v2H3zm12-11l3-3-3-3v2h-4V4H9v2H5v2h4v2h2v-2h4v2z"></path></svg>
                         {Math.floor(link.count / 3)}
                       </span>
-                      <span style={{ background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', color: colors.textMuted, fontWeight: '600' }}>
+                      <span style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', color: colors.textMuted, fontWeight: '700' }}>
                         completed
                       </span>
                     </div>
@@ -311,15 +307,15 @@ export default function DeepBlueDashboard() {
             </div>
           </div>
 
-          <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', minHeight: '300px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.border}` }}>
-              <span style={{ fontWeight: '700', fontSize: '15px' }}>Recent Activity</span>
-              <span style={{ color: colors.blue, fontSize: '13px', cursor: 'pointer', fontWeight: '500' }}>View all →</span>
+          <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.border}` }}>
+              <span style={{ fontWeight: '700', fontSize: '14px' }}>Recent Activity</span>
+              <span style={{ color: colors.blue, fontSize: '12px', cursor: 'pointer', fontWeight: '600' }}>View all →</span>
             </div>
 
-            <div style={{ padding: '10px 20px', flex: 1 }}>
+            <div style={{ padding: '0 20px', flex: 1 }}>
               {clickLogs.length === 0 ? (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '150px', color: colors.textMuted, fontSize: '14px', fontWeight: '500' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '30px 0', color: colors.textMuted, fontSize: '13px', fontWeight: '500' }}>
                   No activity yet
                 </div>
               ) : (
@@ -329,14 +325,14 @@ export default function DeepBlueDashboard() {
                   else if (source.includes('tiktok')) source = 'TikTok';
 
                   return (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: i === 6 ? 'none' : `1px solid ${colors.border}` }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: colors.green }}></div>
-                        <span style={{ fontSize: '14px', color: colors.textMain, fontWeight: '500' }}>/{log.slug}</span>
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i === 6 ? 'none' : `1px solid ${colors.border}` }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: colors.green }}></div>
+                        <span style={{ fontSize: '13px', color: colors.textMain, fontWeight: '600' }}>/{log.slug}</span>
                       </div>
-                      <div style={{ display: 'flex', gap: '20px', fontSize: '13px', color: colors.textMuted, fontWeight: '500' }}>
+                      <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: colors.textMuted, fontWeight: '500' }}>
                         <span>{source}</span>
-                        <span style={{ width: '60px', textAlign: 'right' }}>{new Date(log.created_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</span>
+                        <span style={{ width: '50px', textAlign: 'right' }}>{new Date(log.created_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</span>
                       </div>
                     </div>
                   )
@@ -348,7 +344,7 @@ export default function DeepBlueDashboard() {
         </div>
       </main>
 
-      {/* MODAL TẠO LINK CHUẨN THEME MỚI */}
+      {/* MODAL TẠO LINK */}
       {isModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, backdropFilter: 'blur(4px)' }}>
           <div style={{ background: colors.bgCard, padding: '32px', borderRadius: '16px', border: `1px solid ${colors.border}`, width: '100%', maxWidth: '450px' }}>
