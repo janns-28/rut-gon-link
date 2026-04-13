@@ -19,7 +19,7 @@ export default function DeepBlueDashboard() {
   const [totalClicks, setTotalClicks] = useState(0); 
   const [clicksToday, setClicksToday] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'accounts' | 'social'
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   // === STATE MODAL TẠO LINK & TÌM KIẾM LINK ===
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,7 +28,7 @@ export default function DeepBlueDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState('');
   const [fontLoaded, setFontLoaded] = useState(false);
-  const [linkSearch, setLinkSearch] = useState(''); // MỚI: State tìm kiếm link
+  const [linkSearch, setLinkSearch] = useState('');
 
   // === STATE TRANG QUẢN LÝ TEAM ===
   const [teamMembers, setTeamMembers] = useState([
@@ -126,7 +126,6 @@ export default function DeepBlueDashboard() {
     }
   };
 
-  // MỚI: TRẢ LẠI HÀM COPY VÀ XÓA LINK CHO SẾP
   const handleCopy = (slug) => {
     const fullUrl = `${window.location.origin}/${slug}`;
     navigator.clipboard.writeText(fullUrl);
@@ -183,11 +182,10 @@ export default function DeepBlueDashboard() {
     acc.username.toLowerCase().includes(socialSearch.toLowerCase())
   );
 
-  // === TÍNH TOÁN DATA DASHBOARD (ĐÃ SỬA LẠI ĐỂ HIỂN THỊ TẤT CẢ LINK) ===
+  // === TÍNH TOÁN DATA DASHBOARD ===
   const { processedLinks, networkCount } = useMemo(() => {
     const networks = new Set();
     
-    // Tạo mảng mới chứa TẤT CẢ CÁC LINK thay vì chỉ top 5
     let result = links.map(link => {
         networks.add(getNetworkInfo(link.original_url).name);
         
@@ -205,7 +203,6 @@ export default function DeepBlueDashboard() {
         };
     });
 
-    // Tính năng Tìm kiếm Link
     if (linkSearch) {
       result = result.filter(l => 
         l.slug.toLowerCase().includes(linkSearch.toLowerCase()) || 
@@ -213,7 +210,6 @@ export default function DeepBlueDashboard() {
       );
     }
 
-    // Sắp xếp: Ưu tiên link click nhiều nhất lên đầu, nếu bằng nhau (như 0 click) thì link mới tạo lên đầu
     result.sort((a, b) => b.count !== a.count ? b.count - a.count : new Date(b.created_at) - new Date(a.created_at));
 
     return {
@@ -253,7 +249,9 @@ export default function DeepBlueDashboard() {
   return (
     <div style={{ display: 'flex', height: '100vh', backgroundColor: colors.bgApp, color: colors.textMain, fontFamily: '"Plus Jakarta Sans", "Inter", sans-serif', overflow: 'hidden' }}>
       
-      {/* SIDEBAR */}
+      {/* ======================================= */}
+      {/* SIDEBAR TRÁI                            */}
+      {/* ======================================= */}
       <aside style={{ width: '250px', backgroundColor: colors.bgSidebar, borderRight: `1px solid ${colors.border}`, display: 'flex', flexDirection: 'column', zIndex: 10 }}>
         <div style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ width: '30px', height: '30px', background: colors.blue, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -281,12 +279,14 @@ export default function DeepBlueDashboard() {
         </nav>
       </aside>
 
-      {/* VÙNG MAIN CONTENT */}
+      {/* ======================================= */}
+      {/* VÙNG MAIN CONTENT                       */}
+      {/* ======================================= */}
       <main style={{ flex: 1, padding: '32px 40px', overflowY: 'auto', position: 'relative' }}>
         
-        {/* ==================================================== */}
-        {/* VIEW: DASHBOARD                                      */}
-        {/* ==================================================== */}
+        {/* ======================================= */}
+        {/* TAB 1: DASHBOARD (THỐNG KÊ LINK)        */}
+        {/* ======================================= */}
         {activeTab === 'dashboard' && (
           <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
             <header style={{ marginBottom: '28px' }}>
@@ -294,6 +294,7 @@ export default function DeepBlueDashboard() {
               <p style={{ color: colors.textMuted, margin: 0, fontSize: '14px', fontWeight: '500' }}>Overview of your affiliate operations</p>
             </header>
 
+            {/* 4 CARDS THỐNG KÊ */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '20px' }}>
               <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
@@ -334,11 +335,10 @@ export default function DeepBlueDashboard() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '20px' }}>
               
-              {/* BẢNG 1: QUẢN LÝ PHỄU (ĐÃ TRẢ LẠI TÍNH NĂNG TÌM KIẾM VÀ COPY/XÓA) */}
+              {/* === BẢNG TỔNG HỢP LINK === */}
               <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.border}` }}>
                   <span style={{ fontWeight: '700', fontSize: '14px' }}>Quản lý Phễu & Metrics</span>
-                  {/* Ô Tìm kiếm link trả lại cho sếp */}
                   <input 
                     type="text" 
                     placeholder="Tìm mã hoặc URL..." 
@@ -348,7 +348,6 @@ export default function DeepBlueDashboard() {
                   />
                 </div>
                 
-                {/* Khu vực cuộn hiển thị toàn bộ link, không giới hạn top 5 nữa */}
                 <div style={{ padding: '0 20px', flex: 1, maxHeight: '420px', overflowY: 'auto' }}>
                   {processedLinks.length === 0 ? (
                     <div style={{ color: colors.textMuted, fontSize: '13px', textAlign: 'center', padding: '30px 0', fontWeight: '500' }}>Không tìm thấy chiến dịch nào</div>
@@ -356,7 +355,6 @@ export default function DeepBlueDashboard() {
                     processedLinks.map((link, idx) => (
                       <div key={link.slug} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: idx === processedLinks.length - 1 ? 'none' : `1px solid ${colors.border}` }}>
                         
-                        {/* Cột Tên Link */}
                         <div style={{ flex: '1', minWidth: '120px' }}>
                           <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '4px' }}>/{link.slug}</div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -365,7 +363,6 @@ export default function DeepBlueDashboard() {
                           </div>
                         </div>
 
-                        {/* Cột Metrics */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: colors.textMuted, fontSize: '12px', fontWeight: '600', marginRight: '16px' }}>
                           <span title="Tổng Clicks" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: colors.textMain }}><svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg> {link.count}</span>
                           <span title="Unique IP" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: colors.purple }}><svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg> {link.uniqueIPs}</span>
@@ -374,7 +371,6 @@ export default function DeepBlueDashboard() {
                           <span title="Hoa hồng" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: colors.green, background: 'rgba(34, 197, 94, 0.1)', padding: '2px 6px', borderRadius: '4px' }}><svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08-.402-2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> {link.conversions > 0 ? formatMoney(link.revenue) : '0đ'}</span>
                         </div>
 
-                        {/* MỚI: CỘT THAO TÁC NÚT BẤM (COPY/XÓA) */}
                         <div style={{ display: 'flex', gap: '6px' }}>
                           <button onClick={() => handleCopy(link.slug)} title="Copy Link" style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: colors.textMain, padding: '8px', borderRadius: '6px', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}>
                             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
@@ -383,14 +379,13 @@ export default function DeepBlueDashboard() {
                             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                           </button>
                         </div>
-
                       </div>
                     ))
                   )}
                 </div>
               </div>
 
-              {/* BẢNG 2: MẮT THẦN RADAR (GIỮ NGUYÊN) */}
+              {/* === BẢNG RADAR === */}
               <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.border}` }}>
                   <span style={{ fontWeight: '700', fontSize: '14px' }}>Mắt Thần Radar</span>
@@ -427,7 +422,7 @@ export default function DeepBlueDashboard() {
         )}
 
         {/* ==================================================== */}
-        {/* VIEW: QUẢN LÝ TÀI KHOẢN MXH                          */}
+        {/* TAB 2: QUẢN LÝ TÀI KHOẢN MXH                         */}
         {/* ==================================================== */}
         {activeTab === 'social' && (
           <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
@@ -441,7 +436,6 @@ export default function DeepBlueDashboard() {
               </button>
             </header>
 
-            {/* 3 Thẻ thống kê MXH */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '24px' }}>
               <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '20px' }}>
                 <div style={{ color: colors.textMuted, fontSize: '13px', fontWeight: '600', marginBottom: '12px' }}>Tổng Tài Khoản Đang Nuôi</div>
@@ -457,7 +451,6 @@ export default function DeepBlueDashboard() {
               </div>
             </div>
 
-            {/* Bảng Danh sách Tài khoản (Đã add logic search & filter) */}
             <div style={{ background: colors.bgCard, borderRadius: '12px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
               <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontWeight: '700', fontSize: '15px' }}>Kho Tài Khoản</span>
@@ -519,7 +512,7 @@ export default function DeepBlueDashboard() {
         )}
 
         {/* ==================================================== */}
-        {/* VIEW: ACCOUNTS (CẤU HÌNH SERVER)                     */}
+        {/* TAB 3: CẤU HÌNH SERVER                               */}
         {/* ==================================================== */}
         {activeTab === 'accounts' && (
           <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
@@ -553,4 +546,144 @@ export default function DeepBlueDashboard() {
                     <div style={{ background: colors.blueBg, padding: '8px', borderRadius: '8px', color: colors.blue }}><svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg></div>
                     <h2 style={{ fontSize: '16px', fontWeight: '700', margin: 0 }}>Cấu hình Bot Telegram</h2>
                   </div>
-                  <p style={{ fontSize: '13
+                  
+                  {/* FIX ĐỨT DÒNG CODE Ở ĐÂY NÈ SẾP */}
+                  <p style={{ fontSize: '13px', color: colors.textMuted, marginBottom: '16px', lineHeight: '1.5' }}>
+                    Hiện tại Token và Chat ID đang được bảo mật trên Vercel Environment.
+                  </p>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', fontSize: '13px', color: colors.textMuted, marginBottom: '6px', fontWeight: '600' }}>Telegram Chat ID</label>
+                    <input type="text" disabled placeholder="5476495357" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: 'rgba(255,255,255,0.02)', color: colors.textMuted, outline: 'none', fontSize: '14px', fontFamily: 'inherit', cursor: 'not-allowed' }} />
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ background: colors.orangeBg, padding: '8px', borderRadius: '8px', color: colors.orange }}><svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg></div>
+                    <h2 style={{ fontSize: '16px', fontWeight: '700', margin: 0 }}>Tài khoản Đội nhóm (Team)</h2>
+                  </div>
+                  <button onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)} style={{ background: 'transparent', border: `1px solid ${colors.blue}`, color: colors.blue, padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>+ Thêm NV</button>
+                </div>
+
+                {isAccountMenuOpen && (
+                  <div style={{ background: colors.bgApp, padding: '16px', borderRadius: '8px', border: `1px solid ${colors.border}`, marginBottom: '20px', animation: 'fadeIn 0.2s ease-out' }}>
+                    <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+                      <input type="text" placeholder="Tên đăng nhập" style={{ flex: 1, padding: '10px', borderRadius: '6px', border: `1px solid ${colors.border}`, background: colors.bgCard, color: colors.textMain, outline: 'none', fontSize: '13px' }} />
+                      <select style={{ flex: 1, padding: '10px', borderRadius: '6px', border: `1px solid ${colors.border}`, background: colors.bgCard, color: colors.textMain, outline: 'none', fontSize: '13px' }}>
+                        <option value="publisher">Quyền: Publisher (Chỉ lên Link)</option>
+                        <option value="admin">Quyền: Admin (Full quyền)</option>
+                      </select>
+                    </div>
+                    <button onClick={() => { setIsAccountMenuOpen(false); showToast('Giả lập lưu nhân viên mới thành công'); }} style={{ width: '100%', padding: '10px', background: colors.blue, border: 'none', color: '#fff', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}>Tạo tài khoản</button>
+                  </div>
+                )}
+
+                <div style={{ flex: 1, overflowY: 'auto' }}>
+                  {teamMembers.map((member) => (
+                    <div key={member.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: `1px solid ${colors.border}` }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: colors.bgApp, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', color: colors.textMuted }}>{member.username.charAt(0).toUpperCase()}</div>
+                        <div>
+                          <div style={{ fontSize: '14px', fontWeight: '700', color: colors.textMain, marginBottom: '4px' }}>@{member.username}</div>
+                          <div style={{ display: 'flex', gap: '8px', fontSize: '11px' }}>
+                            <span style={{ color: member.role === 'Super Admin' ? colors.orange : colors.blue, fontWeight: '600' }}>{member.role}</span>
+                            <span style={{ color: colors.textMuted }}>• Đăng nhập: {member.lastLogin}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </main>
+
+      {/* ==================================================== */}
+      {/* CÁC MODAL DÙNG CHUNG (TẠO LINK & TẠO ACC MXH)        */}
+      {/* ==================================================== */}
+      
+      {isModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, backdropFilter: 'blur(4px)' }}>
+          <div style={{ background: colors.bgCard, padding: '32px', borderRadius: '16px', border: `1px solid ${colors.border}`, width: '100%', maxWidth: '450px' }}>
+            <h2 style={{ margin: '0 0 20px 0', fontSize: '20px', color: colors.textMain, fontWeight: '700', letterSpacing: '-0.5px' }}>Tạo Phễu Mồi Mới 🚀</h2>
+            <form onSubmit={handleAddLink} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: colors.textMuted, fontSize: '13px', fontWeight: '600' }}>Link Đích (Affiliate Link)</label>
+                <input type="url" required placeholder="https://dinos.click/..." value={newUrl} onChange={(e) => setNewUrl(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: colors.bgApp, color: colors.textMain, outline: 'none', fontSize: '14px', fontFamily: 'inherit' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: colors.textMuted, fontSize: '13px', fontWeight: '600' }}>Đuôi Link (Slug) - Để trống tự Random</label>
+                <div style={{ display: 'flex', alignItems: 'center', background: colors.bgApp, border: `1px solid ${colors.border}`, borderRadius: '8px', padding: '0 12px' }}>
+                  <span style={{ color: colors.textMuted, fontWeight: '500' }}>/</span>
+                  <input type="text" placeholder="vay-tien-nhanh" value={customSlug} onChange={(e) => setCustomSlug(e.target.value.replace(/[^a-zA-Z0-9-]/g, ''))} style={{ width: '100%', padding: '12px 8px', border: 'none', background: 'transparent', color: colors.textMain, outline: 'none', fontSize: '14px', fontFamily: 'inherit' }} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+                <button type="button" onClick={() => setIsModalOpen(false)} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMuted, borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontFamily: 'inherit' }}>Hủy</button>
+                <button type="submit" disabled={isSubmitting} style={{ flex: 1, padding: '12px', background: isSubmitting ? 'rgba(59, 130, 246, 0.5)' : colors.blue, border: 'none', color: '#fff', borderRadius: '8px', cursor: isSubmitting ? 'not-allowed' : 'pointer', fontWeight: '600', fontFamily: 'inherit' }}>{isSubmitting ? 'Đang tạo...' : 'Tạo Link'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isSocialModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, backdropFilter: 'blur(4px)' }}>
+          <div style={{ background: colors.bgCard, padding: '32px', borderRadius: '16px', border: `1px solid ${colors.border}`, width: '100%', maxWidth: '450px', animation: 'fadeIn 0.2s ease-out' }}>
+            <h2 style={{ margin: '0 0 20px 0', fontSize: '20px', color: colors.textMain, fontWeight: '700', letterSpacing: '-0.5px' }}>Nhập Acc/Via Mới 🛡️</h2>
+            <form onSubmit={handleAddSocialAccount} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '8px', color: colors.textMuted, fontSize: '13px', fontWeight: '600' }}>Nền tảng</label>
+                  <select value={socialForm.platform} onChange={e => setSocialForm({...socialForm, platform: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: colors.bgApp, color: colors.textMain, outline: 'none', fontSize: '14px', fontFamily: 'inherit' }}>
+                    <option value="Facebook">Facebook</option>
+                    <option value="TikTok">TikTok</option>
+                    <option value="Threads">Threads</option>
+                    <option value="Zalo">Zalo</option>
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '8px', color: colors.textMuted, fontSize: '13px', fontWeight: '600' }}>Tên hiển thị</label>
+                  <input type="text" required placeholder="Nguyễn Văn A" value={socialForm.name} onChange={e => setSocialForm({...socialForm, name: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: colors.bgApp, color: colors.textMain, outline: 'none', fontSize: '14px', fontFamily: 'inherit' }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: colors.textMuted, fontSize: '13px', fontWeight: '600' }}>UID / Username</label>
+                <div style={{ display: 'flex', alignItems: 'center', background: colors.bgApp, border: `1px solid ${colors.border}`, borderRadius: '8px', padding: '0 12px' }}>
+                  <span style={{ color: colors.textMuted, fontWeight: '500' }}>@</span>
+                  <input type="text" required placeholder="10008453..." value={socialForm.username} onChange={e => setSocialForm({...socialForm, username: e.target.value})} style={{ width: '100%', padding: '12px 8px', border: 'none', background: 'transparent', color: colors.textMain, outline: 'none', fontSize: '14px', fontFamily: 'inherit' }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: colors.textMuted, fontSize: '13px', fontWeight: '600' }}>Proxy gắn kèm</label>
+                <input type="text" placeholder="IP:Port:User:Pass" value={socialForm.proxy} onChange={e => setSocialForm({...socialForm, proxy: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: colors.bgApp, color: colors.textMain, outline: 'none', fontSize: '14px', fontFamily: 'inherit' }} />
+              </div>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+                <button type="button" onClick={() => setIsSocialModalOpen(false)} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMuted, borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontFamily: 'inherit' }}>Hủy</button>
+                <button type="submit" style={{ flex: 1, padding: '12px', background: colors.blue, border: 'none', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontFamily: 'inherit' }}>Lưu vào Kho</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* TOAST THÔNG BÁO */}
+      {toast && (
+        <div style={{ position: 'fixed', bottom: '20px', right: '20px', background: toast.isError ? colors.red : colors.green, color: '#fff', padding: '12px 24px', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)', zIndex: 60, fontWeight: '600', fontFamily: 'inherit', animation: 'slideIn 0.3s ease-out' }}>
+          {toast.text}
+        </div>
+      )}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+      `}} />
+    </div>
+  );
+}
