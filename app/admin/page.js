@@ -19,7 +19,7 @@ export default function DeepBlueDashboard() {
   const [clicksToday, setClicksToday] = useState(0);
 
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'accounts'
+  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'accounts' | 'social'
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newUrl, setNewUrl] = useState('');
@@ -28,12 +28,20 @@ export default function DeepBlueDashboard() {
   const [toast, setToast] = useState('');
   const [fontLoaded, setFontLoaded] = useState(false);
 
-  // State cho trang Account
+  // State cho trang Sub-Admin
   const [teamMembers, setTeamMembers] = useState([
     { id: 1, username: 'admin_binh', role: 'Super Admin', status: 'Active', lastLogin: 'Vừa xong' },
     { id: 2, username: 'nhanvien_01', role: 'Publisher', status: 'Active', lastLogin: '2 giờ trước' }
   ]);
-  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false); // Đóng/Mở section thêm tài khoản
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+
+  // State MỚI cho trang Quản lý MXH (Dữ liệu Demo)
+  const [socialAccounts, setSocialAccounts] = useState([
+    { id: 1, platform: 'Facebook', username: 'binh_ads_01', name: 'Bình Nguyễn', status: 'Live', proxy: '103.15.22.1', note: 'Acc cổ 2018' },
+    { id: 2, platform: 'TikTok', username: 'vaynhanh_24h', name: 'Tài Chính 24h', status: 'Live', proxy: '103.15.22.2', note: 'Đã gắn bio link' },
+    { id: 3, platform: 'Threads', username: 'binhtienti_real', name: 'Bình Tiền Tỉ', status: 'Checkpoint', proxy: '103.15.22.3', note: 'Đang xác minh sđt' },
+    { id: 4, platform: 'Zalo', username: '0901234567', name: 'Hỗ Trợ Vay', status: 'Live', proxy: 'Direct', note: 'Gửi tin nhắn auto' }
+  ]);
 
   useEffect(() => {
     const link = document.createElement('link');
@@ -153,7 +161,8 @@ export default function DeepBlueDashboard() {
     purple: '#a855f7', purpleBg: 'rgba(168, 85, 247, 0.15)',
     orange: '#f97316', orangeBg: 'rgba(249, 115, 22, 0.15)',
     green: '#22c55e', greenBg: 'rgba(34, 197, 94, 0.15)',
-    red: '#ef4444', yellow: '#eab308'
+    red: '#ef4444', redBg: 'rgba(239, 68, 68, 0.15)',
+    yellow: '#eab308'
   };
 
   const formatMoney = (amount) => {
@@ -161,6 +170,13 @@ export default function DeepBlueDashboard() {
     if (amount >= 1000000) return (amount / 1000000).toFixed(1) + 'M';
     if (amount >= 1000) return (amount / 1000).toFixed(0) + 'K';
     return amount.toString();
+  };
+
+  const getPlatformIcon = (platform) => {
+    if (platform === 'Facebook') return <div style={{ background: '#1877F220', color: '#1877F2', padding: '6px', borderRadius: '6px' }}><svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></div>;
+    if (platform === 'TikTok') return <div style={{ background: '#00000040', color: '#fff', padding: '6px', borderRadius: '6px' }}><svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg></div>;
+    if (platform === 'Zalo') return <div style={{ background: '#0068FF20', color: '#0068FF', padding: '6px', borderRadius: '6px' }}><svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M21.72 10.27c-.24-5.24-4.3-9.27-9.5-9.27-5.4 0-9.7 4.1-9.7 9.17 0 4.5 3.3 8.32 7.72 9.07l-.92 2.6c-.1.3.1.58.4.52l3.43-1.63c.8.2 1.63.3 2.5.3 5.4 0 9.7-4.1 9.7-9.17 0-.52-.03-1.05-.13-1.59z"/></svg></div>;
+    return <div style={{ background: colors.purpleBg, color: colors.purple, padding: '6px', borderRadius: '6px' }}><svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/></svg></div>; // Mặc định Threads/Khác
   };
 
   if (!fontLoaded) return <div style={{ backgroundColor: colors.bgApp, height: '100vh' }}></div>;
@@ -186,9 +202,13 @@ export default function DeepBlueDashboard() {
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg> Tạo Link Phễu
           </button>
 
-          {/* ĐÃ ĐỔI THÀNH NÚT QUẢN LÝ ACCOUNT */}
+          {/* TAB QUẢN LÝ MẠNG XÃ HỘI */}
+          <button onClick={() => setActiveTab('social')} style={{ width: '100%', padding: '10px 14px', border: 'none', background: activeTab === 'social' ? colors.bgCard : 'transparent', color: activeTab === 'social' ? colors.blue : colors.textMuted, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', fontWeight: '600', transition: 'all 0.2s', textAlign: 'left', fontSize: '13px' }}>
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg> Tài Khoản MXH
+          </button>
+
           <button onClick={() => setActiveTab('accounts')} style={{ width: '100%', padding: '10px 14px', border: 'none', background: activeTab === 'accounts' ? colors.bgCard : 'transparent', color: activeTab === 'accounts' ? colors.blue : colors.textMuted, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', fontWeight: '600', transition: 'all 0.2s', textAlign: 'left', fontSize: '13px' }}>
-             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg> Quản lý Account
+             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg> Cấu hình Server
           </button>
         </nav>
       </aside>
@@ -312,21 +332,100 @@ export default function DeepBlueDashboard() {
         )}
 
         {/* ==================================================== */}
-        {/* VIEW: ACCOUNTS (HIỂN THỊ KHI BẤM QUẢN LÝ ACCOUNT)    */}
+        {/* VIEW: QUẢN LÝ TÀI KHOẢN MXH                          */}
+        {/* ==================================================== */}
+        {activeTab === 'social' && (
+          <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
+              <div>
+                <h1 style={{ fontSize: '24px', fontWeight: '700', margin: '0 0 6px 0', letterSpacing: '-0.5px' }}>Quản lý Tài khoản MXH</h1>
+                <p style={{ color: colors.textMuted, margin: 0, fontSize: '14px', fontWeight: '500' }}>Theo dõi trạng thái dàn account seeding, chạy ads.</p>
+              </div>
+              <button onClick={() => showToast('Đang mở form thêm tài khoản')} style={{ background: colors.blue, color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"></path></svg> Nhập Via/Clone
+              </button>
+            </header>
+
+            {/* 3 Thẻ thống kê MXH */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '24px' }}>
+              <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '20px' }}>
+                <div style={{ color: colors.textMuted, fontSize: '13px', fontWeight: '600', marginBottom: '12px' }}>Tổng Tài Khoản Đang Nuôi</div>
+                <div style={{ fontSize: '32px', fontWeight: '800', color: colors.textMain }}>{socialAccounts.length}</div>
+              </div>
+              <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '20px' }}>
+                <div style={{ color: colors.textMuted, fontSize: '13px', fontWeight: '600', marginBottom: '12px' }}>Sống (Live)</div>
+                <div style={{ fontSize: '32px', fontWeight: '800', color: colors.green }}>{socialAccounts.filter(a => a.status === 'Live').length}</div>
+              </div>
+              <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '20px' }}>
+                <div style={{ color: colors.textMuted, fontSize: '13px', fontWeight: '600', marginBottom: '12px' }}>Checkpoint / Die</div>
+                <div style={{ fontSize: '32px', fontWeight: '800', color: colors.red }}>{socialAccounts.filter(a => a.status !== 'Live').length}</div>
+              </div>
+            </div>
+
+            {/* Bảng Danh sách Tài khoản */}
+            <div style={{ background: colors.bgCard, borderRadius: '12px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+              <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: '700', fontSize: '15px' }}>Kho Tài Khoản</span>
+                <input type="text" placeholder="Tìm ID, Tên..." style={{ background: colors.bgApp, border: `1px solid ${colors.border}`, padding: '8px 12px', borderRadius: '6px', color: colors.textMain, fontSize: '13px', outline: 'none' }} />
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: `1px solid ${colors.border}`, color: colors.textMuted, fontSize: '12px', textTransform: 'uppercase' }}>
+                    <th style={{ padding: '14px 20px', fontWeight: '600' }}>Nền tảng / Tên</th>
+                    <th style={{ padding: '14px 20px', fontWeight: '600' }}>Username (UID)</th>
+                    <th style={{ padding: '14px 20px', fontWeight: '600' }}>Proxy / IP Gắn</th>
+                    <th style={{ padding: '14px 20px', fontWeight: '600' }}>Trạng thái</th>
+                    <th style={{ padding: '14px 20px', fontWeight: '600', textAlign: 'right' }}>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {socialAccounts.map((acc, index) => (
+                    <tr key={acc.id} style={{ borderBottom: index === socialAccounts.length - 1 ? 'none' : `1px solid ${colors.border}` }}>
+                      <td style={{ padding: '16px 20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          {getPlatformIcon(acc.platform)}
+                          <div>
+                            <div style={{ fontWeight: '700', fontSize: '14px', marginBottom: '2px' }}>{acc.name}</div>
+                            <div style={{ fontSize: '12px', color: colors.textMuted }}>{acc.note}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px 20px', fontSize: '13px', fontWeight: '500' }}>@{acc.username}</td>
+                      <td style={{ padding: '16px 20px', fontSize: '13px', color: colors.textMuted }}>
+                        <span style={{ background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: '4px' }}>{acc.proxy}</span>
+                      </td>
+                      <td style={{ padding: '16px 20px' }}>
+                        {acc.status === 'Live' ? (
+                          <span style={{ color: colors.green, background: colors.greenBg, padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>• Live</span>
+                        ) : (
+                          <span style={{ color: colors.red, background: colors.redBg, padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>• Checkpoint</span>
+                        )}
+                      </td>
+                      <td style={{ padding: '16px 20px', textAlign: 'right' }}>
+                        <button onClick={() => showToast('Đã ping kiểm tra cookie')} style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMain, padding: '6px 12px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', marginRight: '8px' }}>Check Live</button>
+                        <button style={{ background: 'transparent', border: 'none', color: colors.red, cursor: 'pointer', padding: '6px' }}>Xóa</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ==================================================== */}
+        {/* VIEW: ACCOUNTS (CẤU HÌNH SERVER)                     */}
         {/* ==================================================== */}
         {activeTab === 'accounts' && (
           <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
             <header style={{ marginBottom: '28px' }}>
-              <h1 style={{ fontSize: '24px', fontWeight: '700', margin: '0 0 6px 0', letterSpacing: '-0.5px' }}>Quản lý Account & Hệ thống</h1>
+              <h1 style={{ fontSize: '24px', fontWeight: '700', margin: '0 0 6px 0', letterSpacing: '-0.5px' }}>Quản lý Cấu hình & Server</h1>
               <p style={{ color: colors.textMuted, margin: 0, fontSize: '14px', fontWeight: '500' }}>Thiết lập bảo mật, phân quyền team và API mạng lưới.</p>
             </header>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
               
-              {/* CỘT TRÁI: BẢO MẬT & TELEGRAM */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                
-                {/* Đổi Mật Khẩu */}
                 <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '24px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
                     <div style={{ background: colors.purpleBg, padding: '8px', borderRadius: '8px', color: colors.purple }}><svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg></div>
@@ -345,22 +444,19 @@ export default function DeepBlueDashboard() {
                   </form>
                 </div>
 
-                {/* Cấu hình Telegram (Chỉ UI) */}
                 <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '24px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
                     <div style={{ background: colors.blueBg, padding: '8px', borderRadius: '8px', color: colors.blue }}><svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg></div>
                     <h2 style={{ fontSize: '16px', fontWeight: '700', margin: 0 }}>Cấu hình Bot Telegram</h2>
                   </div>
-                  <p style={{ fontSize: '13px', color: colors.textMuted, marginBottom: '16px', lineHeight: '1.5' }}>Hiện tại Token và Chat ID đang được bảo mật trên Vercel Environment. (Tính năng thay đổi thẳng qua UI đang trong giai đoạn dev).</p>
+                  <p style={{ fontSize: '13px', color: colors.textMuted, marginBottom: '16px', lineHeight: '1.5' }}>Hiện tại Token và Chat ID đang được bảo mật trên Vercel Environment.</p>
                   <div style={{ marginBottom: '16px' }}>
                     <label style={{ display: 'block', fontSize: '13px', color: colors.textMuted, marginBottom: '6px', fontWeight: '600' }}>Telegram Chat ID nhận thông báo</label>
                     <input type="text" disabled placeholder="5476495357" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: 'rgba(255,255,255,0.02)', color: colors.textMuted, outline: 'none', fontSize: '14px', fontFamily: 'inherit', cursor: 'not-allowed' }} />
                   </div>
                 </div>
-
               </div>
 
-              {/* CỘT PHẢI: QUẢN LÝ SUB-USERS */}
               <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -370,7 +466,6 @@ export default function DeepBlueDashboard() {
                   <button onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)} style={{ background: 'transparent', border: `1px solid ${colors.blue}`, color: colors.blue, padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>+ Thêm NV</button>
                 </div>
 
-                {/* Form thêm nhân viên (Mặc định ẩn, bấm nút mới xổ ra) */}
                 {isAccountMenuOpen && (
                   <div style={{ background: colors.bgApp, padding: '16px', borderRadius: '8px', border: `1px solid ${colors.border}`, marginBottom: '20px', animation: 'fadeIn 0.2s ease-out' }}>
                     <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
@@ -384,7 +479,6 @@ export default function DeepBlueDashboard() {
                   </div>
                 )}
 
-                {/* Danh sách nhân viên */}
                 <div style={{ flex: 1, overflowY: 'auto' }}>
                   {teamMembers.map((member) => (
                     <div key={member.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: `1px solid ${colors.border}` }}>
