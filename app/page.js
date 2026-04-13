@@ -1,148 +1,74 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 
-const HOLIDAYS = {
-  '01-01': 'New Year\'s Day', '14-02': 'Valentine\'s Day', '08-03': 'Women\'s Day',
-  '30-04': 'Reunification', '01-05': 'Labour Day', '02-09': 'Independence Day',
-  '20-10': 'Women\'s Day VN', '20-11': 'Teacher\'s Day', '24-12': 'Christmas', '31-12': 'New Year\'s Eve'
-};
-
-export default function AppleMinimalistDashboard() {
+// TRANG CHỦ NGỤY TRANG (DECOY PAGE) CHUYÊN TRỊ BOT QUÉT ADS
+export default function DecoyFinanceBlog() {
   const [mounted, setMounted] = useState(false);
-  const [now, setNow] = useState(new Date());
-  const [dynamicQuote, setDynamicQuote] = useState('');
 
   useEffect(() => {
-    // Nạp phông chữ Inter - Chuẩn mực của Apple
-    const link = document.createElement('link');
-    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-
+    document.title = 'BinhTienTi - Giải Pháp Tài Chính Công Nghệ';
     setMounted(true);
-    const fetchQuote = async () => {
-      try {
-        const res = await fetch('/api/random-quote');
-        const data = await res.json();
-        if (data.quote) setDynamicQuote(data.quote);
-      } catch (e) { setDynamicQuote("Stay hungry, stay foolish."); }
-    };
-
-    fetchQuote();
-    const timer = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(timer);
   }, []);
 
-  if (!mounted) return <div style={{ backgroundColor: '#000', minHeight: '100vh' }}></div>;
-
-  const nextYear = now.getFullYear() + 1;
-  const target = new Date(`January 1, ${nextYear} 00:00:00`).getTime();
-  const gap = target - now.getTime();
-  const d = Math.floor(gap / (1000 * 60 * 60 * 24));
-  const h = Math.floor((gap % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const m = Math.floor((gap % (1000 * 60 * 60)) / (1000 * 60));
-  const s = Math.floor((gap % (1000 * 60)) / 1000);
-
-  const dayMonth = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const holiday = HOLIDAYS[dayMonth];
+  if (!mounted) return <div style={{ backgroundColor: '#f9fafb', minHeight: '100vh' }}></div>;
 
   return (
     <main style={st.viewport}>
-      {/* Mesh Gradient nền cực sâu */}
-      <div style={st.meshBG}></div>
-
-      <div style={st.centralStack}>
-        
-        {/* 1. NGÀY THÁNG - PHẦN TRÊN CÙNG */}
-        <p style={st.topDate}>
-          {now.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
-        </p>
-
-        {/* 2. ĐỒNG HỒ CHÍNH - TO & MỀM MẠI */}
-        <div style={st.clockDisplay}>
-          <span style={st.tDigit}>{String(now.getHours()).padStart(2, '0')}</span>
-          <span style={st.tSep}>:</span>
-          <span style={st.tDigit}>{String(now.getMinutes()).padStart(2, '0')}</span>
-          <span style={st.tSep}>:</span>
-          <span style={st.tDigit}>{String(now.getSeconds()).padStart(2, '0')}</span>
-        </div>
-
-        {/* 3. CÂU KHÌA / LỄ - TRÔI NỔI TỰ NHIÊN (KHÔNG CÓ Ô) */}
-        <div style={st.statusArea}>
-          {holiday ? (
-            <span style={st.holidayMsg}>✨ {holiday}</span>
-          ) : (
-            <span style={st.funnyQuote}>
-              {dynamicQuote ? `“ ${dynamicQuote} ”` : ''}
-            </span>
-          )}
-        </div>
-
-        {/* VẠCH CHIA TINH TẾ */}
-        <div style={st.divider}></div>
-
-        {/* 4. ĐẾM NGƯỢC - WIDGET STYLE (KHÔNG CÓ Ô BAO NGOÀI) */}
-        <div style={st.countdownArea}>
-          <p style={st.countHeader}>COUNTDOWN TO {nextYear}</p>
-          <div style={st.timerGrid}>
-            <div style={st.u}><span style={st.v}>{d}</span><span style={st.l}>NGÀY</span></div>
-            <div style={st.sSep}>:</div>
-            <div style={st.u}><span style={st.v}>{String(h).padStart(2, '0')}</span><span style={st.l}>GIỜ</span></div>
-            <div style={st.sSep}>:</div>
-            <div style={st.u}><span style={st.v}>{String(m).padStart(2, '0')}</span><span style={st.l}>PHÚT</span></div>
-            <div style={st.sSep}>:</div>
-            <div style={st.u}><span style={st.v}>{String(s).padStart(2, '0')}</span><span style={st.l}>GIÂY</span></div>
+      {/* Thanh điều hướng uy tín */}
+      <nav style={st.navbar}>
+        <div style={st.navContent}>
+          <div style={st.logo}>BTT-Finance</div>
+          <div style={st.menu}>
+            <span style={st.menuItem}>Trang chủ</span>
+            <span style={st.menuItem}>Kiến thức</span>
+            <span style={st.menuItem}>Liên hệ</span>
           </div>
         </div>
+      </nav>
 
+      {/* Nội dung báo mạng */}
+      <div style={st.container}>
+        <h1 style={st.articleTitle}>Xu hướng Tài chính Công nghệ (Fintech) năm 2026: Cơ hội và Thách thức</h1>
+        <p style={st.meta}>Tác giả: BinhTienTi • Xuất bản: Hôm nay</p>
+        
+        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1000&q=80" alt="Fintech" style={st.articleImage} />
+
+        <div style={st.articleContent}>
+          <p style={st.paragraph}>Ngành công nghệ tài chính (Fintech) đang trải qua một giai đoạn chuyển mình mạnh mẽ. Sự kết hợp giữa AI, Blockchain và hệ thống thanh toán di động đã tạo ra những bước ngoặt lớn trong cách người tiêu dùng tiếp cận các khoản vay và quản lý tài sản cá nhân.</p>
+          <p style={st.paragraph}>Theo báo cáo mới nhất, việc ứng dụng trí tuệ nhân tạo (AI) trong phân tích rủi ro tín dụng giúp giảm thiểu tới 40% tỷ lệ nợ xấu, đồng thời tăng tốc độ giải ngân lên gấp 3 lần so với các tổ chức tài chính truyền thống.</p>
+          <h2 style={st.subHeading}>Cơ hội cho người tiêu dùng</h2>
+          <p style={st.paragraph}>Giờ đây, người tiêu dùng không cần phải đến trực tiếp ngân hàng để đăng ký các khoản vay nhỏ. Thông qua các ứng dụng di động, quá trình xác minh danh tính điện tử (eKYC) chỉ mất chưa tới 5 phút. Sự tiện lợi này mở ra cơ hội tiếp cận vốn nhanh chóng cho hàng triệu người chưa có lịch sử tín dụng.</p>
+        </div>
       </div>
 
+      <footer style={st.footer}>
+        <p>© 2026 BTT-Finance. Mọi bản quyền được bảo lưu.</p>
+      </footer>
+
       <style jsx global>{`
-        body { margin: 0; background: #000; overflow: hidden; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
-        @keyframes reveal {
-          from { opacity: 0; transform: translateY(20px); filter: blur(15px); }
-          to { opacity: 1; transform: translateY(0); filter: blur(0); }
-        }
+        body { margin: 0; background: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1f2937; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
       `}</style>
     </main>
   );
 }
 
 const st = {
-  viewport: { 
-    height: '100vh', width: '100vw', display: 'flex', justifyContent: 'center', 
-    alignItems: 'center', backgroundColor: '#000', position: 'relative' 
-  },
-  meshBG: {
-    position: 'absolute', inset: 0, zIndex: 0,
-    background: 'radial-gradient(at 50% 50%, #161618 0%, #000 80%)',
-    opacity: 0.8
-  },
-  centralStack: {
-    zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-    textAlign: 'center', width: '100%', maxWidth: '1000px',
-    animation: 'reveal 1.5s cubic-bezier(0.16, 1, 0.3, 1)'
-  },
-
-  // Typography Apple Style
-  topDate: { color: '#0a84ff', fontSize: '13px', fontWeight: '700', letterSpacing: '5px', textTransform: 'uppercase', marginBottom: '10px' },
+  viewport: { minHeight: '100vh', display: 'flex', flexDirection: 'column', animation: 'fadeIn 0.5s ease-out' },
+  navbar: { background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '16px 0', position: 'sticky', top: 0, zIndex: 10 },
+  navContent: { maxWidth: '800px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 20px' },
+  logo: { fontSize: '20px', fontWeight: '800', color: '#111827', letterSpacing: '-0.5px' },
+  menu: { display: 'flex', gap: '20px' },
+  menuItem: { fontSize: '14px', fontWeight: '500', color: '#6b7280', cursor: 'pointer' },
   
-  clockDisplay: { display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '20px' },
-  tDigit: { fontSize: 'clamp(5rem, 22vw, 15rem)', fontWeight: '800', color: '#fff', letterSpacing: '-10px', lineHeight: '0.9' },
-  tSep: { fontSize: 'clamp(3rem, 12vw, 9rem)', fontWeight: '200', color: 'rgba(255,255,255,0.05)', position: 'relative', top: '-10px' },
-
-  statusArea: { minHeight: '40px', marginBottom: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center' },
-  funnyQuote: { color: 'rgba(255,255,255,0.4)', fontSize: 'clamp(1rem, 1.5vw, 1.3rem)', fontWeight: '400', fontStyle: 'italic', letterSpacing: '-0.2px' },
-  holidayMsg: { color: '#ffd60a', fontSize: '1.5rem', fontWeight: '700', textShadow: '0 0 20px rgba(255, 214, 10, 0.3)' },
-
-  divider: { height: '1px', width: '60px', background: 'rgba(255,255,255,0.1)', marginBottom: '50px' },
-
-  // Countdown Floating (Không có ô)
-  countdownArea: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
-  countHeader: { fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.2)', letterSpacing: '6px', marginBottom: '30px' },
-  timerGrid: { display: 'flex', alignItems: 'center', gap: '40px' },
-  u: { display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '80px' },
-  v: { fontSize: '42px', fontWeight: '700', color: '#fff', letterSpacing: '-1.5px' },
-  l: { fontSize: '9px', fontWeight: '800', color: 'rgba(255,255,255,0.15)', marginTop: '8px', letterSpacing: '1px' },
-  sSep: { fontSize: '24px', fontWeight: '200', color: 'rgba(255,255,255,0.05)', paddingBottom: '20px' }
+  container: { maxWidth: '800px', margin: '40px auto', padding: '0 20px', flex: 1 },
+  articleTitle: { fontSize: '32px', fontWeight: '800', lineHeight: '1.3', marginBottom: '16px', color: '#111827' },
+  meta: { fontSize: '14px', color: '#6b7280', marginBottom: '32px' },
+  articleImage: { width: '100%', height: 'auto', borderRadius: '12px', marginBottom: '40px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' },
+  
+  articleContent: { fontSize: '18px', lineHeight: '1.7', color: '#374151' },
+  paragraph: { marginBottom: '24px' },
+  subHeading: { fontSize: '24px', fontWeight: '700', marginTop: '40px', marginBottom: '16px', color: '#111827' },
+  
+  footer: { background: '#fff', borderTop: '1px solid #e5e7eb', padding: '32px 0', textAlign: 'center', color: '#9ca3af', fontSize: '14px', marginTop: '60px' }
 };
