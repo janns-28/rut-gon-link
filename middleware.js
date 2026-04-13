@@ -2,9 +2,6 @@ import { NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
 import { createClient } from '@supabase/supabase-js'
 
-// ==========================================
-// LỆNH GỌI HỒN: Bắt buộc Next.js phải chạy lính gác
-// ==========================================
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }
@@ -27,13 +24,12 @@ export async function middleware(request) {
     const adminKey = request.cookies.get('admin_key')?.value;
     const serverKey = process.env.ADMIN_PASSWORD;
 
-    // Đéo có pass trên Vercel hoặc Cookie đéo khớp -> Trục xuất!
     if (!serverKey || adminKey !== serverKey) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
   }
 
-  // 2. BỎ QUA CÁC TRANG CƠ BẢN
+  // 2. BỎ QUA CÁC TRANG CƠ BẢN VÀ API
   if (
     pathname.startsWith('/api/') || 
     pathname === '/' || 
@@ -43,7 +39,7 @@ export async function middleware(request) {
     return NextResponse.next();
   }
 
-  // 3. XỬ LÝ KHÁCH VÀ ĐỊNH VỊ HYPERLEAD
+  // 3. XỬ LÝ KHÁCH VÀ ĐỊNH VỊ HYPERLEAD (ĐÃ SỬA LỖI RỚT SỐ)
   const slug = pathname.slice(1);
   let targetUrl = null;
 
@@ -60,7 +56,8 @@ export async function middleware(request) {
 
     if (targetUrl) {
       const userAgent = request.headers.get('user-agent') || '';
-      const ip = request.headers.get('x-forwarded-for') || request.ip || 'Unknown';
+      // Ưu tiên IP thật từ Vercel thay vì x-forwarded-for để chống làm giả IP
+      const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for') || request.ip || 'Unknown';
       const originalReferrer = request.headers.get('referer') || 'Direct';
 
       if (BOT_AGENTS.some(bot => userAgent.toLowerCase().includes(bot))) {
@@ -70,22 +67,29 @@ export async function middleware(request) {
       const source = request.nextUrl.searchParams.get('s') || request.nextUrl.searchParams.get('utm_source');
       const finalReferrer = source ? `[Nguồn: ${source}] ${originalReferrer}` : originalReferrer;
 
-      // Ghi sổ & Bắn tracking aff_sub1
-      const { data: logData } = await supabase
-        .from('click_logs')
-        .insert([{ slug, referrer: finalReferrer, user_agent: userAgent, ip_address: ip }])
-        .select('id')
-        .single();
+      let logId = null;
 
-      const finalUrl = new URL(targetUrl);
-      if (logData && logData.id) {
-        finalUrl.searchParams.set('aff_sub1', logData.id);
+      // CỐ GẮNG GHI LOG VÀO DATABASE BẰNG MỘT KHỐI TRY/CATCH RIÊNG
+      try {
+        const { data: logData } = await supabase
+          .from('click_logs')
+          .insert([{ slug, referrer: finalReferrer, user_agent: userAgent, ip_address: ip }])
+          .select('id')
+          .single();
+        if (logData && logData.id) logId = logData.id;
+      } catch (dbError) {
+        // NẾU DATABASE SẬP/LAG -> KỆ MẸ NÓ, GHI LỖI VÀO CONSOLE, ĐÉO ĐƯỢC DỪNG LUỒNG CHUYỂN HƯỚNG!
+        console.error("⚠️ Lỗi ghi tracking DB, nhưng vẫn tự động đẩy khách đi:", dbError);
       }
+
+      // ĐÁ KHÁCH VỀ LINK AFFILIATE (BẤT CHẤP LOG CÓ THÀNH CÔNG HAY KHÔNG)
+      const finalUrl = new URL(targetUrl);
+      if (logId) finalUrl.searchParams.set('aff_sub1', logId);
 
       return NextResponse.redirect(finalUrl);
     }
   } catch (e) {
-    console.error("Lỗi:", e);
+    console.error("LỖI MIDDLEWARE NGHIÊM TRỌNG:", e);
   }
 
   return NextResponse.next();
