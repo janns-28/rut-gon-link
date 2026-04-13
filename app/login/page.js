@@ -22,6 +22,7 @@ export default function ModernAppleLogin() {
     e.preventDefault();
     setLoading(true);
     setError('');
+
     try {
       const res = await fetch('/api/login', {
         method: 'POST',
@@ -31,15 +32,21 @@ export default function ModernAppleLogin() {
       const data = await res.json();
       
       if (data.success) {
-        // TÔI CHỈ THÊM ĐÚNG 1 DÒNG NÀY Ở ĐÂY NÍ NHÉ:
-        // Lấy đúng cái password mày nhập để làm chìa khóa qua mặt Middleware
+        // Ghi chìa khóa vào trình duyệt
         document.cookie = `admin_key=${password}; path=/; max-age=86400`;
         
-        router.push('/admin');
+        // DÙNG LỆNH NÀY ĐỂ DIỆT LỖI: Ép trình duyệt load lại hoàn toàn (Hard Reload)
+        // Đảm bảo Middleware sẽ nhận được Cookie ngay lập tức ở request tiếp theo
+        window.location.href = '/admin';
       }
-      else setError(data.message || 'Sai thông tin đăng nhập');
-    } catch (err) { setError('Lỗi kết nối hệ thống'); }
-    finally { setLoading(false); }
+      else {
+        setError(data.message || 'Sai thông tin đăng nhập');
+      }
+    } catch (err) { 
+      setError('Lỗi kết nối hệ thống'); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   if (!mounted) return <div style={{ backgroundColor: '#000', minHeight: '100vh' }}></div>;
@@ -122,7 +129,7 @@ const st = {
   
   logoBox: { marginBottom: '30px', display: 'flex', justifyContent: 'center' },
   logo: {
-    width: '72px', height: '72px', background: '#1d1d1f', borderRadius: '18px', // Tỉ lệ Squircle
+    width: '72px', height: '72px', background: '#1d1d1f', borderRadius: '18px',
     display: 'flex', justifyContent: 'center', alignItems: 'center',
     fontSize: '32px', fontWeight: '800', color: '#fff', border: '1px solid rgba(255,255,255,0.05)'
   },
