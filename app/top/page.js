@@ -11,7 +11,6 @@ export default function TopVayPage() {
 
   if (!mounted) return <div style={{ backgroundColor: '#000', minHeight: '100vh' }}></div>;
 
-  // DANH SÁCH 3 APP VAY MÀY ĐANG CHẠY (Thay link affiliate thật của mày vào ô link)
   const apps = [
     {
       id: 1,
@@ -59,7 +58,8 @@ export default function TopVayPage() {
               </div>
               <p style={st.desc}>{app.desc}</p>
               
-              <a href={app.link} style={st.button} target="_blank" rel="noopener noreferrer">
+              {/* ĐÃ FIX TẠI ĐÂY: target="_self" CHỐNG LỖI FACEBOOK/TIKTOK BROWSER */}
+              <a href={app.link} style={st.button} target="_self">
                 Đăng ký ngay
               </a>
             </div>
@@ -93,7 +93,7 @@ const st = {
   button: { 
     display: 'block', width: '100%', padding: '14px 0', background: '#0071e3', color: '#fff', 
     textAlign: 'center', borderRadius: '12px', textDecoration: 'none', fontWeight: '600', fontSize: '15px',
-    transition: 'background 0.2s'
+    transition: 'background 0.2s, opacity 0.2s', cursor: 'pointer'
   },
   footerNote: { textAlign: 'center', color: '#424245', fontSize: '13px', marginTop: '30px' }
 };
