@@ -251,4 +251,171 @@ export default function DeepBlueDashboard() {
                 <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
               </div>
             </div>
-            <div style={{ fontSize: '26px', fontWeight: '700', marginBottom: '6px', letterSpacing: '-0.5px' }}>
+            <div style={{ fontSize: '26px', fontWeight: '700', marginBottom: '6px', letterSpacing: '-0.5px' }}>{networkCount}</div>
+            <div style={{ fontSize: '12px', display: 'flex', gap: '8px', fontWeight: '500' }}>
+              <span style={{ color: colors.blue }}>Networks active</span>
+            </div>
+          </div>
+
+          <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ color: colors.textMuted, fontSize: '13px', fontWeight: '600' }}>Clicks Today</span>
+              <div style={{ background: colors.greenBg, padding: '4px', borderRadius: '6px', color: colors.green }}>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+              </div>
+            </div>
+            <div style={{ fontSize: '26px', fontWeight: '700', marginBottom: '6px', letterSpacing: '-0.5px' }}>{clicksToday.toLocaleString()}</div>
+            <div style={{ fontSize: '12px', color: colors.textMuted, fontWeight: '500' }}>
+              Actions today
+            </div>
+          </div>
+
+        </div>
+
+        {/* 2 PANELS Ở DƯỚI */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '20px' }}>
+          
+          <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.border}` }}>
+              <span style={{ fontWeight: '700', fontSize: '14px' }}>Top Phễu Hiệu Quả (Real Metrics)</span>
+              <span style={{ color: colors.blue, fontSize: '12px', cursor: 'pointer', fontWeight: '600' }}>View all →</span>
+            </div>
+            
+            <div style={{ padding: '0 20px', flex: 1 }}>
+              {topLinks.length === 0 ? (
+                <div style={{ color: colors.textMuted, fontSize: '13px', textAlign: 'center', padding: '30px 0', fontWeight: '500' }}>Chưa có data chiến dịch</div>
+              ) : (
+                topLinks.map((link, idx) => (
+                  <div key={link.slug} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: idx === topLinks.length - 1 ? 'none' : `1px solid ${colors.border}` }}>
+                    
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '4px' }}>/{link.slug}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ background: link.network.bg, color: link.network.color, padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '700' }}>
+                          {link.network.name}
+                        </span>
+                        <span style={{ color: colors.textMuted, fontSize: '11px', fontWeight: '500' }}>ID: {link.slug}</span>
+                      </div>
+                    </div>
+
+                    {/* VÙNG CHỨA CÁC CHỈ SỐ AFFILIATE CHUẨN */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', color: colors.textMuted, fontSize: '12px', fontWeight: '600' }}>
+                      
+                      {/* Tổng Clicks */}
+                      <span title="Tổng số lượt Click" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: colors.textMain }}>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg> 
+                        {link.count}
+                      </span>
+                      
+                      {/* Unique IP */}
+                      <span title="Click từ IP riêng biệt (Unique)" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: colors.purple }}>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        {link.uniqueIPs}
+                      </span>
+                      
+                      {/* Mobile */}
+                      <span title="Click từ Điện thoại" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: colors.blue }}>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        {link.mobileClicks}
+                      </span>
+                      
+                      {/* Desktop */}
+                      <span title="Click từ Máy tính" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: colors.orange }}>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        {link.desktopClicks}
+                      </span>
+                      
+                      {/* Chuyển đổi / Tiền (Từ Postback) */}
+                      <span title="Hoa hồng tạm tính" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: colors.green, background: 'rgba(34, 197, 94, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08-.402-2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        {link.conversions > 0 ? formatMoney(link.revenue) : '0đ'}
+                      </span>
+
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div style={{ background: colors.bgCard, border: `1px solid ${colors.border}`, borderRadius: '12px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${colors.border}` }}>
+              <span style={{ fontWeight: '700', fontSize: '14px' }}>Mắt Thần Radar</span>
+              <span style={{ color: colors.blue, fontSize: '12px', cursor: 'pointer', fontWeight: '600' }}>Live</span>
+            </div>
+
+            <div style={{ padding: '0 20px', flex: 1 }}>
+              {clickLogs.length === 0 ? (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '30px 0', color: colors.textMuted, fontSize: '13px', fontWeight: '500' }}>
+                  No activity yet
+                </div>
+              ) : (
+                clickLogs.slice(0, 7).map((log, i) => {
+                  let source = log.referrer || 'Direct';
+                  if (source.includes('facebook')) source = 'Facebook';
+                  else if (source.includes('tiktok')) source = 'TikTok';
+                  else if (source.includes('zalo')) source = 'Zalo';
+
+                  return (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i === 6 ? 'none' : `1px solid ${colors.border}` }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: log.status === 'approved' ? colors.yellow : colors.green, boxShadow: `0 0 6px ${log.status === 'approved' ? colors.yellow : colors.green}` }}></div>
+                        <span style={{ fontSize: '13px', color: colors.textMain, fontWeight: '600' }}>/{log.slug}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: colors.textMuted, fontWeight: '500' }}>
+                        <span style={{ maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{source}</span>
+                        <span style={{ width: '40px', textAlign: 'right' }}>{new Date(log.created_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</span>
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </div>
+
+        </div>
+      </main>
+
+      {/* MODAL TẠO LINK */}
+      {isModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, backdropFilter: 'blur(4px)' }}>
+          <div style={{ background: colors.bgCard, padding: '32px', borderRadius: '16px', border: `1px solid ${colors.border}`, width: '100%', maxWidth: '450px' }}>
+            <h2 style={{ margin: '0 0 20px 0', fontSize: '20px', color: colors.textMain, fontWeight: '700', letterSpacing: '-0.5px' }}>Tạo Phễu Mồi Mới 🚀</h2>
+            <form onSubmit={handleAddLink} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: colors.textMuted, fontSize: '13px', fontWeight: '600' }}>Link Đích (Affiliate Link)</label>
+                <input 
+                  type="url" required placeholder="https://dinos.click/..." value={newUrl} onChange={(e) => setNewUrl(e.target.value)}
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: colors.bgApp, color: colors.textMain, outline: 'none', fontSize: '14px', fontFamily: 'inherit' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: colors.textMuted, fontSize: '13px', fontWeight: '600' }}>Đuôi Link (Slug) - Để trống tự Random</label>
+                <div style={{ display: 'flex', alignItems: 'center', background: colors.bgApp, border: `1px solid ${colors.border}`, borderRadius: '8px', padding: '0 12px' }}>
+                  <span style={{ color: colors.textMuted, fontWeight: '500' }}>/</span>
+                  <input 
+                    type="text" placeholder="vay-tien-nhanh" value={customSlug} onChange={(e) => setCustomSlug(e.target.value.replace(/[^a-zA-Z0-9-]/g, ''))}
+                    style={{ width: '100%', padding: '12px 8px', border: 'none', background: 'transparent', color: colors.textMain, outline: 'none', fontSize: '14px', fontFamily: 'inherit' }}
+                  />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+                <button type="button" onClick={() => setIsModalOpen(false)} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${colors.border}`, color: colors.textMuted, borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontFamily: 'inherit' }}>Hủy</button>
+                <button type="submit" disabled={isSubmitting} style={{ flex: 1, padding: '12px', background: isSubmitting ? 'rgba(59, 130, 246, 0.5)' : colors.blue, border: 'none', color: '#fff', borderRadius: '8px', cursor: isSubmitting ? 'not-allowed' : 'pointer', fontWeight: '600', fontFamily: 'inherit' }}>
+                  {isSubmitting ? 'Đang tạo...' : 'Tạo Link'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* TOAST THÔNG BÁO */}
+      {toast && (
+        <div style={{ position: 'fixed', bottom: '20px', right: '20px', background: toast.isError ? colors.red : colors.green, color: '#fff', padding: '12px 24px', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)', zIndex: 60, fontWeight: '600', fontFamily: 'inherit' }}>
+          {toast.text}
+        </div>
+      )}
+    </div>
+  );
+}
